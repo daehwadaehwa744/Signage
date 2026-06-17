@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer" />
     <title>고양시대화노인종합복지관 사이니지</title>
     
     <!-- 부드럽고 가독성 좋은 Pretendard 폰트 로드 -->
@@ -483,9 +484,9 @@
                         ];
                         
                         const proxies = [
+                            (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
                             (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-                            (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-                            (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`
+                            (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
                         ];
 
                         let allItems = [];
@@ -640,9 +641,9 @@
                         let success = false;
                         
                         const proxies = [
+                            `https://corsproxy.io/?${encodeURIComponent(RSS_URL)}`,
                             `https://api.allorigins.win/raw?url=${encodeURIComponent(RSS_URL)}`,
-                            `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(RSS_URL)}`,
-                            `https://corsproxy.io/?${encodeURIComponent(RSS_URL)}`
+                            `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(RSS_URL)}`
                         ];
 
                         for (const proxyUrl of proxies) {
@@ -675,7 +676,7 @@
                                 let contentNode = (encodedNode ? encodedNode.textContent : null) || item.querySelector("description")?.textContent || "";
                                 const d = new Date(pubDateStr);
                                 const pubDate = isNaN(d) ? pubDateStr.split(' ')[0] : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-                                const imgMatch = contentNode.match(/<img[^>]+src="([^">]+)"/);
+                                const imgMatch = contentNode.match(/<img[^>]+src=["']([^"'>]+)["']/i);
                                 let textContent = contentNode.replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n\n').replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ').trim();
                                 textContent = textContent.replace(/\n{3,}/g, '\n\n'); 
                                 return { title, pubDate, category, link, thumbnail: imgMatch ? imgMatch[1] : null, description: textContent.replace(/\n/g, ' ').substring(0, 120) + '...', fullContent: textContent };
