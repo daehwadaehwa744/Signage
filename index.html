@@ -1,0 +1,1880 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>고양시대화노인종합복지관 사이니지</title>
+    
+    <!-- 부드럽고 가독성 좋은 Pretendard 폰트 로드 -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+
+    <!-- React & Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        /* 기본 폰트 및 부드러운 안티앨리어싱 적용 */
+        * {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        body { overflow: hidden; touch-action: none; background-color: #e5e5e5; }
+        
+        /* 스크롤바 커스텀 및 숨기기 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 10px; }
+        
+        /* 애니메이션 */
+        @keyframes progress {
+            from { width: 0%; }
+            to { width: 100%; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes pulse-heart {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .animate-fadeIn { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-heart-pulse { animation: pulse-heart 2s ease-in-out infinite; }
+        
+        /* 유틸리티 */
+        .cursor-grab { cursor: grab; }
+        .cursor-grabbing { cursor: grabbing; }
+        .break-keep { word-break: keep-all; overflow-wrap: break-word; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
+
+        // 1. 인라인 SVG 아이콘 컴포넌트
+        const Icon = ({ name, size = 24, className = "" }) => {
+            const icons = {
+                heart: <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>,
+                sun: <><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></>,
+                "cloud-sun": <><path d="M12 2v2M4.93 4.93l1.41 1.41M20 12h2M19.07 4.93l-1.41 1.41"/><path d="M15.947 12.65a4 4 0 0 0-5.925-4.128"/><path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z"/></>,
+                cloud: <path d="M17.5 19c2.5 0 4.5-2 4.5-4.5 0-2.4-1.9-4.4-4.3-4.5a7 7 0 1 0-13.4 3c-1.9.4-3.3 2.1-3.3 4a4 4 0 0 0 4 4h12.5Z"/>,
+                "cloud-rain": <><path d="M16 13a4 4 0 0 0-8 0 4 4 0 0 0-4 4 4 4 0 0 0 4 4h8a4 4 0 0 0 4-4 4 4 0 0 0-4-4Z"/><path d="M8 19v2M12 19v2M16 19v2"/></>,
+                "cloud-snow": <><path d="M16 13a4 4 0 0 0-8 0 4 4 0 0 0-4 4 4 4 0 0 0 4 4h8a4 4 0 0 0 4-4 4 4 0 0 0-4-4Z"/><path d="M8 17h.01M12 17h.01M16 17h.01M8 21h.01M12 21h.01M16 21h.01"/></>,
+                "cloud-lightning": <><path d="M16 13a4 4 0 0 0-8 0 4 4 0 0 0-4 4 4 4 0 0 0 4 4h8a4 4 0 0 0 4-4 4 4 0 0 0-4-4Z"/><path d="m13 16-3 3h3l-3 3"/></>,
+                "cloud-fog": <><path d="M4 10a6 6 0 0 1 10.65-3.5"/><path d="M10 14h10"/><path d="M4 14h2"/><path d="M2 18h20"/><path d="M2 22h20"/><path d="M8 22V10"/></>,
+                "chevron-right": <path d="m9 18 6-6-6-6"/>,
+                "chevron-left": <path d="m15 18-6-6 6-6"/>,
+                "external-link": <><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></>,
+                globe: <><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></>,
+                info: <><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></>,
+                x: <path d="M18 6 6 18M6 6l12 12"/>,
+                settings: <><path d="M12.22 2h-.44a2 2 0 0 0-2 2a2 2 0 0 1-2 2a2 2 0 0 0-2 2a2 2 0 0 1-2 2a2 2 0 0 0-2 2v.44a2 2 0 0 0 2 2a2 2 0 0 1 2 2a2 2 0 0 0 2 2a2 2 0 0 1 2 2a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2a2 2 0 0 1 2-2a2 2 0 0 0 2-2a2 2 0 0 1 2-2a2 2 0 0 0 2-2v-.44a2 2 0 0 0-2-2a2 2 0 0 1-2-2a2 2 0 0 0-2-2a2 2 0 0 1-2-2a2 2 0 0 0-2-2Z"/><circle cx="12" cy="12" r="3"/></>,
+                maximize: <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>,
+                minimize: <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>,
+                save: <><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></>,
+                check: <path d="M20 6 9 17l-5-5"/>,
+                calendar: <><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><path d="M16 2v4M8 2v4M3 10h18"/></>,
+                clock: <><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></>,
+                image: <><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></>,
+                mapPin: <><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></>,
+                newspaper: <><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></>,
+                utensils: <><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></>,
+                phone: <><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></>,
+                bookOpen: <><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></>,
+                layout: <><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M3 9h18"/><path d="M9 21V9"/></>,
+                delete: <><path d="M20 5H9l-7 7 7 7h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Z"/><line x1="18" x2="12" y1="9" y2="15"/><line x1="12" x2="18" y1="9" y2="15"/></>,
+                coffee: <><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></>,
+                users: <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>,
+                monitor: <><rect width="20" height="15" x="2" y="7" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></>,
+                elevator: <><rect width="12" height="18" x="6" y="3" rx="2" ry="2"/><path d="M12 7v4"/><path d="m10 9 2-2 2 2"/><path d="M12 17v-4"/><path d="m10 15 2 2 2-2"/></>,
+                stairs: <><path d="M3 21h4v-4h4v-4h4v-4h4V5"/></>,
+                door: <><path d="M12 3v14"/><path d="m19 10-7 7-7-7"/></>,
+                navigation: <><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></>
+            };
+
+            return (
+                <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    {icons[name] || null}
+                </svg>
+            );
+        };
+
+        const THEME_OPTIONS = [
+            { id: 'emerald', label: '에메랄드', colorCode: 'bg-emerald-600' },
+            { id: 'blue', label: '바다 블루', colorCode: 'bg-blue-600' },
+            { id: 'orange', label: '따뜻한 오렌지', colorCode: 'bg-orange-500' },
+            { id: 'purple', label: '우아한 퍼플', colorCode: 'bg-purple-600' },
+            { id: 'rose', label: '사랑스런 로즈', colorCode: 'bg-rose-500' },
+            { id: 'indigo', label: '깊은 인디고', colorCode: 'bg-indigo-600' },
+            { id: 'teal', label: '차분한 청록', colorCode: 'bg-teal-600' },
+            { id: 'amber', label: '해바라기 옐로우', colorCode: 'bg-amber-500' },
+            { id: 'slate', label: '모던 차콜', colorCode: 'bg-slate-700' }
+        ];
+
+        const THEME_COLORS = {
+            emerald: { header: 'bg-emerald-800', tabBg: 'bg-emerald-700', iconText: 'text-emerald-800', subtitle: 'text-emerald-200', weatherBg: 'bg-emerald-900/40', dateText: 'text-emerald-100', emptyBg: 'from-emerald-100 to-emerald-50', emptyHeart: 'text-emerald-200/50', progress: 'bg-emerald-400', listIcon: 'text-emerald-600', activeBorder: 'border-emerald-500', chevron: 'text-emerald-500', infoBoxBg: 'bg-emerald-50', infoBoxTextDark: 'text-emerald-900', closeBtn: 'bg-emerald-700 hover:bg-emerald-800', saveBtn: 'bg-emerald-600 hover:bg-emerald-700', spinner: 'border-emerald-600', hoverBg: 'hover:bg-emerald-50', badge: 'bg-emerald-500' },
+            blue: { header: 'bg-blue-800', tabBg: 'bg-blue-700', iconText: 'text-blue-800', subtitle: 'text-blue-200', weatherBg: 'bg-blue-900/40', dateText: 'text-blue-100', emptyBg: 'from-blue-100 to-blue-50', emptyHeart: 'text-blue-200/50', progress: 'bg-blue-400', listIcon: 'text-blue-600', activeBorder: 'border-blue-500', chevron: 'text-blue-500', infoBoxBg: 'bg-blue-50', infoBoxTextDark: 'text-blue-900', closeBtn: 'bg-blue-700 hover:bg-blue-800', saveBtn: 'bg-blue-600 hover:bg-blue-700', spinner: 'border-blue-600', hoverBg: 'hover:bg-blue-50', badge: 'bg-blue-500' },
+            orange: { header: 'bg-orange-700', tabBg: 'bg-orange-600', iconText: 'text-orange-700', subtitle: 'text-orange-100', weatherBg: 'bg-orange-900/30', dateText: 'text-orange-50', emptyBg: 'from-orange-100 to-orange-50', emptyHeart: 'text-orange-200/50', progress: 'bg-orange-300', listIcon: 'text-orange-500', activeBorder: 'border-orange-400', chevron: 'text-orange-500', infoBoxBg: 'bg-orange-50', infoBoxTextDark: 'text-orange-900', closeBtn: 'bg-orange-600 hover:bg-orange-700', saveBtn: 'bg-orange-500 hover:bg-orange-600', spinner: 'border-orange-500', hoverBg: 'hover:bg-orange-50', badge: 'bg-orange-500' },
+            purple: { header: 'bg-purple-800', tabBg: 'bg-purple-700', iconText: 'text-purple-800', subtitle: 'text-purple-200', weatherBg: 'bg-purple-900/40', dateText: 'text-purple-100', emptyBg: 'from-purple-100 to-purple-50', emptyHeart: 'text-purple-200/50', badge: 'bg-purple-500', progress: 'bg-purple-400', listIcon: 'text-purple-600', activeBorder: 'border-purple-500', chevron: 'text-purple-500', infoBoxBg: 'bg-purple-50', infoBoxTextDark: 'text-purple-900', closeBtn: 'bg-purple-700 hover:bg-purple-800', saveBtn: 'bg-purple-600 hover:bg-purple-700', spinner: 'border-purple-600', hoverBg: 'hover:bg-purple-50' },
+            rose: { header: 'bg-rose-800', tabBg: 'bg-rose-700', iconText: 'text-rose-800', subtitle: 'text-rose-200', weatherBg: 'bg-rose-900/40', dateText: 'text-rose-100', emptyBg: 'from-rose-100 to-rose-50', emptyHeart: 'text-rose-200/50', progress: 'bg-rose-400', listIcon: 'text-rose-600', activeBorder: 'border-rose-500', chevron: 'text-rose-500', infoBoxBg: 'bg-rose-50', infoBoxTextDark: 'text-rose-900', closeBtn: 'bg-rose-700 hover:bg-rose-800', saveBtn: 'bg-rose-600 hover:bg-rose-700', spinner: 'border-rose-600', hoverBg: 'hover:bg-rose-50', badge: 'bg-rose-500' },
+            indigo: { header: 'bg-indigo-800', tabBg: 'bg-indigo-700', iconText: 'text-indigo-800', subtitle: 'text-indigo-200', weatherBg: 'bg-indigo-900/40', dateText: 'text-indigo-100', emptyBg: 'from-indigo-100 to-indigo-50', emptyHeart: 'text-indigo-200/50', progress: 'bg-indigo-400', listIcon: 'text-indigo-600', activeBorder: 'border-indigo-500', chevron: 'text-indigo-500', infoBoxBg: 'bg-indigo-50', infoBoxTextDark: 'text-indigo-900', closeBtn: 'bg-indigo-700 hover:bg-indigo-800', saveBtn: 'bg-indigo-600 hover:bg-indigo-700', spinner: 'border-indigo-600', hoverBg: 'hover:bg-indigo-50', badge: 'bg-indigo-500' },
+            teal: { header: 'bg-teal-800', tabBg: 'bg-teal-700', iconText: 'text-teal-800', subtitle: 'text-teal-200', weatherBg: 'bg-teal-900/40', dateText: 'text-teal-100', emptyBg: 'from-teal-100 to-teal-50', emptyHeart: 'text-teal-200/50', progress: 'bg-teal-400', listIcon: 'text-teal-600', activeBorder: 'border-teal-500', chevron: 'text-teal-500', infoBoxBg: 'bg-teal-50', infoBoxTextDark: 'text-teal-900', closeBtn: 'bg-teal-700 hover:bg-teal-800', saveBtn: 'bg-teal-600 hover:bg-teal-700', spinner: 'border-teal-600', hoverBg: 'hover:bg-teal-50', badge: 'bg-teal-500' },
+            amber: { header: 'bg-amber-700', tabBg: 'bg-amber-600', iconText: 'text-amber-800', subtitle: 'text-amber-100', weatherBg: 'bg-amber-900/30', dateText: 'text-amber-50', emptyBg: 'from-amber-100 to-amber-50', emptyHeart: 'text-amber-200/50', progress: 'bg-amber-400', listIcon: 'text-amber-600', activeBorder: 'border-amber-500', chevron: 'text-amber-500', infoBoxBg: 'bg-amber-50', infoBoxTextDark: 'text-amber-900', closeBtn: 'bg-amber-600 hover:bg-amber-700', saveBtn: 'bg-amber-500 hover:bg-amber-600', spinner: 'border-amber-500', hoverBg: 'hover:bg-amber-50', badge: 'bg-amber-500' },
+            slate: { header: 'bg-slate-800', tabBg: 'bg-slate-700', iconText: 'text-slate-800', subtitle: 'text-slate-300', weatherBg: 'bg-slate-900/50', dateText: 'text-slate-200', emptyBg: 'from-slate-200 to-slate-100', emptyHeart: 'text-slate-300/50', progress: 'bg-slate-500', listIcon: 'text-slate-700', activeBorder: 'border-slate-600', chevron: 'text-slate-600', infoBoxBg: 'bg-slate-100', infoBoxTextDark: 'text-slate-900', closeBtn: 'bg-slate-700 hover:bg-slate-800', saveBtn: 'bg-slate-700 hover:bg-slate-800', spinner: 'border-slate-700', hoverBg: 'hover:bg-slate-100', badge: 'bg-slate-600' }
+        };
+
+        // 층별 기본 안내도 데이터: 실제 건물의 가로형 4:3 비율에 맞춘 정밀 그리드 배치 (도면 이미지 반영)
+        const DEFAULT_FLOOR_PLAN = {
+            "B1": [
+                { id: "b1_1", name: "엘리\n베이터", x: 8, y: 10, w: 14, h: 16, desc: "엘리베이터입니다.", icon: "elevator" },
+                { id: "b1_2", name: "계단", x: 24, y: 10, w: 14, h: 16, desc: "층간 이동용 계단입니다.", icon: "stairs" },
+                { id: "b1_3", name: "방재실", x: 8, y: 45, w: 18, h: 28, desc: "건물 안전 및 시설 관리를 위한 방재실입니다.", icon: "settings" },
+                { id: "b1_4", name: "주차장", x: 35, y: 35, w: 60, h: 55, desc: "지하 주차 공간입니다.", icon: "layout" }
+            ],
+            "1F": [
+                { id: "1f_1", name: "대한노인회\n일산서구지회", x: 2, y: 2, w: 22, h: 58, desc: "대한노인회 일산서구지회 사무실입니다.", icon: "users" },
+                { id: "1f_3", name: "cafe.\n선배시민", x: 2, y: 70, w: 22, h: 28, desc: "커피와 음료를 즐길 수 있는 카페입니다.", icon: "coffee" },
+                { id: "1f_5", name: "화장실", x: 26, y: 2, w: 16, h: 20, desc: "남/녀 화장실", icon: "info" },
+                { id: "1f_6", name: "엘리\n베이터", x: 46, y: 2, w: 8, h: 16, desc: "메인 엘리베이터입니다.", icon: "elevator" },
+                { id: "1f_7", name: "계단", x: 54, y: 2, w: 8, h: 16, desc: "메인 계단입니다.", icon: "stairs" },
+                { id: "1f_4", name: "안내데스크\n(INFO)", x: 36, y: 75, w: 16, h: 23, desc: "복지관 이용 안내 및 접수를 도와드립니다.", icon: "info" },
+                { id: "1f_8", name: "엘리\n베이터", x: 54, y: 64, w: 8, h: 16, desc: "보조 엘리베이터입니다.", icon: "elevator" },
+                { id: "1f_9", name: "계단", x: 54, y: 82, w: 8, h: 16, desc: "보조 계단입니다.", icon: "stairs" },
+                { id: "1f_10", name: "대화소망\n어린이집", x: 64, y: 2, w: 34, h: 96, desc: "아이들이 꿈을 키우는 대화소망어린이집입니다.", icon: "users" }
+            ],
+            "2F": [
+                { id: "2f_1", name: "종합사무실", x: 2, y: 2, w: 22, h: 70, desc: "복지관 직원들이 업무를 보는 종합사무실입니다.", icon: "layout" },
+                { id: "2f_2", name: "관장실", x: 2, y: 75, w: 14, h: 23, desc: "관장실입니다.", icon: "users" },
+                { id: "2f_3", name: "맞춤돌봄\n사무실", x: 18, y: 87, w: 14, h: 11, desc: "노인맞춤돌봄서비스 담당 사무실입니다.", icon: "heart" },
+                { id: "2f_4", name: "화장실", x: 26, y: 2, w: 16, h: 20, desc: "남/녀 화장실", icon: "info" },
+                { id: "2f_5", name: "엘리\n베이터", x: 44, y: 2, w: 8, h: 16, desc: "메인 엘리베이터입니다.", icon: "elevator" },
+                { id: "2f_6", name: "계단", x: 54, y: 2, w: 6, h: 16, desc: "메인 계단입니다.", icon: "stairs" },
+                { id: "2f_7", name: "상담실/\n자원봉사자실", x: 62, y: 2, w: 12, h: 20, desc: "어르신 상담 및 자원봉사자 휴게 공간입니다.", icon: "users" },
+                { id: "2f_8", name: "201호", x: 76, y: 2, w: 10, h: 20, desc: "프로그램실 201호입니다.", icon: "layout" },
+                { id: "2f_9", name: "202호", x: 88, y: 2, w: 10, h: 20, desc: "프로그램실 202호입니다.", icon: "layout" },
+                { id: "2f_10", name: "엘리\n베이터", x: 34, y: 55, w: 8, h: 16, desc: "보조 엘리베이터입니다.", icon: "elevator" },
+                { id: "2f_11", name: "계단", x: 34, y: 82, w: 6, h: 16, desc: "보조 계단입니다.", icon: "stairs" },
+                { id: "2f_12", name: "선배시민\n정원", x: 44, y: 35, w: 26, h: 46, desc: "어르신들이 쉴 수 있는 실내 정원입니다.", icon: "sun" },
+                { id: "2f_13", name: "디지털 체험 존\n(D*세권)", x: 72, y: 30, w: 26, h: 18, desc: "키오스크, 스마트폰 등 디지털 기기 체험 공간입니다.", icon: "monitor" },
+                { id: "2f_14", name: "203호", x: 72, y: 52, w: 26, h: 46, desc: "프로그램실 203호입니다.", icon: "layout" }
+            ],
+            "3F": [
+                { id: "3f_1", name: "대화마당\n(다목적강당)", x: 2, y: 2, w: 22, h: 58, desc: "대규모 행사 및 강연이 열리는 다목적 강당입니다.", icon: "layout" },
+                { id: "3f_2", name: "스튜디오\n(301호)", x: 2, y: 64, w: 22, h: 34, desc: "방송 및 영상 촬영을 위한 스튜디오입니다.", icon: "monitor" },
+                { id: "3f_3", name: "화장실", x: 26, y: 2, w: 16, h: 20, desc: "남/녀 화장실", icon: "info" },
+                { id: "3f_4", name: "엘리\n베이터", x: 44, y: 2, w: 8, h: 16, desc: "메인 엘리베이터입니다.", icon: "elevator" },
+                { id: "3f_5", name: "계단", x: 54, y: 2, w: 6, h: 16, desc: "메인 계단입니다.", icon: "stairs" },
+                { id: "3f_6", name: "엘리\n베이터", x: 36, y: 55, w: 8, h: 16, desc: "보조 엘리베이터입니다.", icon: "elevator" },
+                { id: "3f_7", name: "다목적실", x: 26, y: 87, w: 9, h: 11, desc: "소규모 모임 및 회의를 위한 다목적실입니다.", icon: "users" },
+                { id: "3f_8", name: "직원\n휴게실", x: 37, y: 87, w: 9, h: 11, desc: "직원들을 위한 휴게 공간입니다.", icon: "coffee" },
+                { id: "3f_9", name: "계단", x: 48, y: 82, w: 6, h: 16, desc: "보조 계단입니다.", icon: "stairs" },
+                { id: "3f_10", name: "선배시민 식당", x: 62, y: 2, w: 36, h: 68, desc: "맛있고 영양가 있는 식사를 제공하는 식당입니다.", icon: "utensils" },
+                { id: "3f_11", name: "스마트\n건강실", x: 62, y: 75, w: 16, h: 23, desc: "스마트 기기를 활용한 건강 관리실입니다.", icon: "heart" },
+                { id: "3f_12", name: "정보화교실", x: 80, y: 75, w: 18, h: 23, desc: "컴퓨터 및 스마트폰 교육이 진행되는 교실입니다.", icon: "monitor" }
+            ],
+            "ROOF": [
+                { id: "roof_1", name: "태양열 판넬", x: 5, y: 10, w: 35, h: 80, desc: "친환경 에너지를 생산하는 태양열 판넬입니다.", icon: "sun" },
+                { id: "roof_3", name: "운동 zone", x: 75, y: 15, w: 20, h: 30, desc: "가벼운 운동을 할 수 있는 공간입니다.", icon: "users" },
+                { id: "roof_4", name: "야외\n테이블", x: 75, y: 55, w: 20, h: 30, desc: "휴식을 취할 수 있는 야외 테이블입니다.", icon: "coffee" }
+            ]
+        };
+
+        const getWeatherInfo = (weatherCode) => {
+            if (weatherCode === 0) return { desc: '맑음', iconName: 'sun', color: 'text-yellow-400', modalColor: 'text-orange-500' };
+            if (weatherCode === 1 || weatherCode === 2 || weatherCode === 3) return { desc: '구름조금/흐림', iconName: 'cloud-sun', color: 'text-yellow-300', modalColor: 'text-yellow-500' };
+            if (weatherCode >= 45 && weatherCode <= 48) return { desc: '안개', iconName: 'cloud-fog', color: 'text-stone-300', modalColor: 'text-stone-400' };
+            if (weatherCode >= 51 && weatherCode <= 67) return { desc: '비', iconName: 'cloud-rain', color: 'text-blue-300', modalColor: 'text-blue-500' };
+            if (weatherCode >= 71 && weatherCode <= 77) return { desc: '눈', iconName: 'cloud-snow', color: 'text-white', modalColor: 'text-cyan-400' };
+            if (weatherCode >= 80 && weatherCode <= 82) return { desc: '소나기', iconName: 'cloud-rain', color: 'text-blue-400', modalColor: 'text-blue-500' };
+            if (weatherCode >= 95 && weatherCode <= 99) return { desc: '뇌우', iconName: 'cloud-lightning', color: 'text-purple-300', modalColor: 'text-purple-500' };
+            return { desc: '맑음', iconName: 'sun', color: 'text-yellow-400', modalColor: 'text-orange-500' };
+        };
+
+        const FALLBACK_POSTS = [
+            {
+                title: "[모집] 평생교육 프로그램 수강생 대모집",
+                pubDate: "2026-04-15",
+                category: "모집안내",
+                link: "https://m.blog.naver.com/daehwasenior1352",
+                thumbnail: "https://images.unsplash.com/photo-1544928147-79a2dbc1f389?auto=format&fit=crop&w=800&q=80",
+                description: "활기찬 노후를 위한 다양한 평생교육 프로그램 수강생을 모집합니다.",
+                fullContent: "어르신들의 활기찬 노후를 위한 다양한 평생교육 프로그램 수강생을 모집합니다.\n\n서예, 스마트폰, 라인댄스, 요가 등 다채로운 강좌가 준비되어 있습니다.\n- 접수 방법: 복지관 1층 안내데스크 방문\n- 문의: 031-917-1352"
+            }
+        ];
+
+        const FALLBACK_MENU = [
+            { title: "월요일 식단 안내", desc: "현미밥\n소고기미역국\n고등어구이\n시금치나물\n포기김치" },
+            { title: "화요일 식단 안내", desc: "흑미밥\n된장찌개\n제육볶음\n상추쌈\n깍두기" }
+        ];
+
+        function App() {
+            const [posts, setPosts] = useState([]);
+            const [activeIndex, setActiveIndex] = useState(0);
+            const [currentTime, setCurrentTime] = useState(new Date());
+            const [loading, setLoading] = useState(true);
+            const [selectedPost, setSelectedPost] = useState(null);
+            const [webViewUrl, setWebViewUrl] = useState(null);
+            
+            const [weather, setWeather] = useState({ temp: '-', desc: '로딩중', iconName: 'cloud-sun', color: 'text-yellow-200', modalColor: 'text-yellow-500' });
+            const [weeklyWeather, setWeeklyWeather] = useState([]);
+            const [selectedWeatherDay, setSelectedWeatherDay] = useState(null);
+            const [menuPosts, setMenuPosts] = useState([]);
+            const [mapError, setMapError] = useState(false);
+            
+            const [activeTab, setActiveTab] = useState('news');
+            
+            // 층별 안내 관련 상태
+            const [currentFloor, setCurrentFloor] = useState('1F');
+            const [selectedRoom, setSelectedRoom] = useState(null);
+            
+            const [settings, setSettings] = useState({ 
+                interval: 15, mode: '9:16', postCount: 10, theme: 'emerald', autoCloseTimeout: 30,
+                fontScale: 100, fontScaleHeader: 100, fontScaleMain: 100, fontScaleList: 100, fontScaleModal: 100,
+                lastTabType: 'floor', // 기본값을 'floor'(층별 안내)로 변경
+                floorPlan: DEFAULT_FLOOR_PLAN
+            });
+            const [isAdminOpen, setIsAdminOpen] = useState(false);
+            const [adminTab, setAdminTab] = useState('general'); // 'general' | 'floorMap'
+            const [adminSelectedFloor, setAdminSelectedFloor] = useState('1F');
+            const [adminSelectedRoomId, setAdminSelectedRoomId] = useState(null);
+            
+            const [tempSettings, setTempSettings] = useState(settings);
+            const [isFullscreen, setIsFullscreen] = useState(false);
+            
+            const containerRef = useRef(null);
+            const postsRef = useRef(posts);
+            const activeIndexRef = useRef(activeIndex);
+
+            useEffect(() => { postsRef.current = posts; }, [posts]);
+            useEffect(() => { activeIndexRef.current = activeIndex; }, [activeIndex]);
+
+            const mode = settings.mode;
+            const colors = THEME_COLORS[settings.theme] || THEME_COLORS.emerald;
+
+            const TABS = [
+                { id: 'news', label: '주요 소식', iconName: 'newspaper' },
+                { id: 'weather', label: '날씨 정보', iconName: 'cloud-sun' },
+                { id: 'menu', label: '식단 정보', iconName: 'utensils' },
+                { id: 'course', label: '강좌 정보', iconName: 'bookOpen' },
+                settings.lastTabType === 'floor' 
+                    ? { id: 'floor', label: '층별 안내', iconName: 'layout' }
+                    : { id: 'location', label: '위치 정보', iconName: 'mapPin' }
+            ];
+
+            useEffect(() => {
+                const saved = localStorage.getItem('welfareSignageSettings');
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved);
+                        delete parsed.rssUrl;
+                        if (!parsed.fontScale) parsed.fontScale = 100;
+                        if (!parsed.fontScaleHeader) parsed.fontScaleHeader = 100;
+                        if (!parsed.fontScaleMain) parsed.fontScaleMain = 100;
+                        if (!parsed.fontScaleList) parsed.fontScaleList = 100;
+                        if (!parsed.fontScaleModal) parsed.fontScaleModal = 100;
+                        if (!THEME_COLORS[parsed.theme]) parsed.theme = 'emerald';
+                        if (!parsed.mode) parsed.mode = '9:16';
+                        if (!parsed.lastTabType) parsed.lastTabType = 'floor';
+                        
+                        // 기존에 저장된 데이터가 없는 경우 기본 배치 강제 적용 (또는 항목수가 모자랄때)
+                        if (!parsed.floorPlan || Object.keys(parsed.floorPlan).length === 0 || !parsed.floorPlan['3F']) {
+                            parsed.floorPlan = DEFAULT_FLOOR_PLAN;
+                        } else {
+                            // 사용자의 최신 요청을 즉시 반영하기 위한 스마트 덮어쓰기 로직
+                            // B1, ROOF 전체 초기화 적용 (새로운 이미지 도면 반영)
+                            parsed.floorPlan['B1'] = DEFAULT_FLOOR_PLAN['B1'];
+                            parsed.floorPlan['ROOF'] = DEFAULT_FLOOR_PLAN['ROOF'];
+
+                            const forceUpdateIds = ['1f_4', '1f_6', '1f_7', '1f_8', '1f_9', '2f_3', '3f_7', '3f_8'];
+                            Object.keys(DEFAULT_FLOOR_PLAN).forEach(floorKey => {
+                                if (floorKey !== 'B1' && floorKey !== 'ROOF') {
+                                    if (!parsed.floorPlan[floorKey]) {
+                                        parsed.floorPlan[floorKey] = DEFAULT_FLOOR_PLAN[floorKey];
+                                    } else {
+                                        parsed.floorPlan[floorKey] = parsed.floorPlan[floorKey]
+                                            .filter(room => room.id !== '1f_2') // 책방 삭제 캐시 반영
+                                            .map(room => {
+                                                if (forceUpdateIds.includes(room.id)) {
+                                                    return DEFAULT_FLOOR_PLAN[floorKey].find(dr => dr.id === room.id) || room;
+                                                }
+                                                return room;
+                                            });
+                                    }
+                                }
+                            });
+                        }
+                        
+                        setSettings(prev => ({...prev, ...parsed}));
+                    } catch(e) {}
+                }
+            }, []);
+
+            useEffect(() => {
+                if (activeIndex >= settings.postCount) setActiveIndex(0);
+            }, [settings.postCount, activeIndex]);
+
+            useEffect(() => {
+                const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+                document.addEventListener('fullscreenchange', onFsChange);
+                return () => document.removeEventListener('fullscreenchange', onFsChange);
+            }, []);
+
+            const toggleFullscreen = () => {
+                if (!isFullscreen) {
+                    const elem = containerRef.current || document.documentElement;
+                    if (elem.requestFullscreen) elem.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => setIsFullscreen(true));
+                    else setIsFullscreen(true);
+                } else {
+                    if (document.exitFullscreen && document.fullscreenElement) document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => setIsFullscreen(false));
+                    else setIsFullscreen(false);
+                }
+            };
+
+            const handleSaveSettings = () => {
+                setSettings(tempSettings);
+                localStorage.setItem('welfareSignageSettings', JSON.stringify(tempSettings));
+                if(activeTab === 'location' && tempSettings.lastTabType === 'floor') setActiveTab('floor');
+                if(activeTab === 'floor' && tempSettings.lastTabType === 'location') setActiveTab('location');
+                setIsAdminOpen(false);
+            };
+
+            const updateRoomSetting = (prop, val) => {
+                setTempSettings(prev => ({
+                    ...prev,
+                    floorPlan: {
+                        ...prev.floorPlan,
+                        [adminSelectedFloor]: prev.floorPlan[adminSelectedFloor].map(room => 
+                            room.id === adminSelectedRoomId ? { ...room, [prop]: val } : room
+                        )
+                    }
+                }));
+            };
+
+            // 새 요소 추가 기능
+            const handleAddRoom = () => {
+                const newId = `${adminSelectedFloor.toLowerCase()}_${Date.now()}`;
+                const newRoom = { id: newId, name: "새 공간", x: 40, y: 40, w: 20, h: 20, desc: "설명을 입력하세요.", icon: "layout" };
+                setTempSettings(prev => ({
+                    ...prev,
+                    floorPlan: {
+                        ...prev.floorPlan,
+                        [adminSelectedFloor]: [...(prev.floorPlan[adminSelectedFloor] || []), newRoom]
+                    }
+                }));
+                setAdminSelectedRoomId(newId);
+            };
+
+            // 요소 삭제 기능
+            const handleDeleteRoom = () => {
+                setTempSettings(prev => ({
+                    ...prev,
+                    floorPlan: {
+                        ...prev.floorPlan,
+                        [adminSelectedFloor]: prev.floorPlan[adminSelectedFloor].filter(r => r.id !== adminSelectedRoomId)
+                    }
+                }));
+                setAdminSelectedRoomId(null);
+            };
+
+            useEffect(() => {
+                const fetchWeather = async () => {
+                    try {
+                        // 날씨와 대기질(미세먼지) 데이터를 병렬로 동시에 가져옵니다. (주간 예보에 필요한 상세 데이터 파라미터 추가)
+                        const [weatherRes, aqRes] = await Promise.all([
+                            fetch(`https://api.open-meteo.com/v1/forecast?latitude=37.6745&longitude=126.7479&current=temperature_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_sum,wind_speed_10m_max,apparent_temperature_max&timezone=Asia%2FSeoul`),
+                            fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=37.6745&longitude=126.7479&current=pm10,pm2_5&timezone=Asia%2FSeoul`)
+                        ]);
+                        
+                        const weatherData = await weatherRes.json();
+                        const aqData = await aqRes.json();
+                        
+                        if (weatherData.current && weatherData.daily) {
+                            const currentInfo = getWeatherInfo(weatherData.current.weather_code);
+                            
+                            // 일출/일몰 시간 포맷 변환
+                            const formatTime = (isoString) => {
+                                if (!isoString) return '-';
+                                const date = new Date(isoString);
+                                return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
+                            };
+
+                            // 미세먼지 수치 기반 대기질 등급 계산
+                            const pm10 = aqData.current?.pm10 || 0;
+                            const pm25 = aqData.current?.pm2_5 || 0;
+                            
+                            let aqiDesc = '좋음';
+                            let aqiColor = 'text-blue-500';
+                            let aqiBg = 'bg-blue-400';
+                            
+                            if (pm10 > 150 || pm25 > 75) { aqiDesc = '매우나쁨'; aqiColor = 'text-red-500'; aqiBg = 'bg-red-500'; }
+                            else if (pm10 > 80 || pm25 > 35) { aqiDesc = '나쁨'; aqiColor = 'text-orange-500'; aqiBg = 'bg-orange-500'; }
+                            else if (pm10 > 30 || pm25 > 15) { aqiDesc = '보통'; aqiColor = 'text-emerald-500'; aqiBg = 'bg-emerald-500'; }
+
+                            setWeather({ 
+                                temp: Math.round(weatherData.current.temperature_2m), 
+                                feelsLike: Math.round(weatherData.current.apparent_temperature),
+                                desc: currentInfo.desc, 
+                                iconName: currentInfo.iconName, 
+                                color: currentInfo.color, 
+                                modalColor: currentInfo.modalColor,
+                                wind: weatherData.current.wind_speed_10m,
+                                precip: weatherData.current.precipitation,
+                                sunrise: formatTime(weatherData.daily.sunrise[0]),
+                                sunset: formatTime(weatherData.daily.sunset[0]),
+                                pm10: Math.round(pm10),
+                                pm25: Math.round(pm25),
+                                aqiDesc,
+                                aqiColor,
+                                aqiBg
+                            });
+                            
+                            const weekly = weatherData.daily.time.map((time, idx) => {
+                                const dateObj = new Date(time);
+                                const dayStr = dateObj.toLocaleDateString('ko-KR', { weekday: 'short' });
+                                const info = getWeatherInfo(weatherData.daily.weather_code[idx]);
+                                return {
+                                    day: idx === 0 ? '오늘' : dayStr,
+                                    maxTemp: Math.round(weatherData.daily.temperature_2m_max[idx]),
+                                    minTemp: Math.round(weatherData.daily.temperature_2m_min[idx]),
+                                    feelsLike: Math.round(weatherData.daily.apparent_temperature_max[idx]),
+                                    precip: weatherData.daily.precipitation_sum[idx],
+                                    wind: weatherData.daily.wind_speed_10m_max[idx],
+                                    sunrise: formatTime(weatherData.daily.sunrise[idx]),
+                                    sunset: formatTime(weatherData.daily.sunset[idx]),
+                                    pm10: idx === 0 ? Math.round(pm10) : null,
+                                    pm25: idx === 0 ? Math.round(pm25) : null,
+                                    aqiDesc: idx === 0 ? aqiDesc : null,
+                                    aqiColor: idx === 0 ? aqiColor : null,
+                                    aqiBg: idx === 0 ? aqiBg : null,
+                                    iconName: info.iconName,
+                                    color: info.color,
+                                    modalColor: info.modalColor
+                                };
+                            }).slice(0, 7); 
+                            setWeeklyWeather(weekly);
+                        }
+                    } catch (e) { 
+                        // 에러 시 임시 데이터 설정
+                        setWeather(prev => ({ ...prev, temp: '22', desc: '맑음', iconName: 'sun', color: 'text-yellow-400', modalColor: 'text-orange-500' })); 
+                    }
+                };
+                fetchWeather();
+                const timer = setInterval(fetchWeather, 3600000); 
+                return () => clearInterval(timer);
+            }, []);
+
+            // 식단 데이터 파싱 (복지관 웹사이트 직접 크롤링 방식으로 변경)
+            useEffect(() => {
+                const fetchMenuData = async () => {
+                    try {
+                        const urlsToScrape = [
+                            'https://www.dh-seniorwelfarecenter.co.kr/about/guide_list.php',
+                            'https://www.dh-seniorwelfarecenter.co.kr/about/guide_list.php?boardid=diet&sk=&sw=&category=&offset=10'
+                        ];
+                        
+                        const proxies = [
+                            (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+                            (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+                            (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`
+                        ];
+
+                        let allItems = [];
+                        const today = new Date();
+                        const todayVal = (today.getMonth() + 1) * 100 + today.getDate();
+
+                        for (const targetUrl of urlsToScrape) {
+                            let htmlText = '';
+                            let fetchSuccess = false;
+
+                            for (const proxyFn of proxies) {
+                                try {
+                                    const res = await fetch(proxyFn(targetUrl));
+                                    if (res.ok) {
+                                        htmlText = await res.text();
+                                        if (htmlText.includes('식단 목록')) {
+                                            fetchSuccess = true;
+                                            break; 
+                                        }
+                                    }
+                                } catch (e) {}
+                            }
+
+                            if (!fetchSuccess) continue; // 현재 URL 실패 시 다음 URL 시도
+
+                            // HTML 문자열을 DOM 객체로 파싱
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(htmlText, "text/html");
+
+                            // '식단 목록' 캡션을 가진 테이블 찾기
+                            const captions = Array.from(doc.querySelectorAll("caption"));
+                            const targetCaption = captions.find(c => c.textContent.includes("식단 목록"));
+                            
+                            if (targetCaption) {
+                                const table = targetCaption.closest("table");
+                                const rows = table.querySelectorAll("tbody tr");
+
+                                const parsedItems = Array.from(rows).map(row => {
+                                    const cells = row.querySelectorAll("td, th");
+                                    // 열이 2개 미만인 빈 칸 패스
+                                    if (cells.length < 2) return null;
+
+                                    // 첫 번째 열(cells[0])은 1211, 1210 같은 게시판 번호이므로 패스!
+                                    // 두 번째 열(cells[1])에서 날짜와 식단 제목을 추출합니다.
+                                    const originalTitle = cells[1].textContent.trim();
+                                    
+                                    // 세 번째 열(cells[2])부터 메뉴 내용 추출 (게시판 구조에 따라)
+                                    // 만약 열이 두 개뿐이라면 두 번째 열을 사용합니다.
+                                    let originalDesc = "";
+                                    const startIdx = cells.length > 2 ? 2 : 1;
+                                    
+                                    for(let i = startIdx; i < cells.length; i++) {
+                                        originalDesc += cells[i].innerHTML + "<br>";
+                                    }
+
+                                    let title = originalTitle;
+                                    
+                                    // 1) 여러 개의 하이픈(--) 및 괄호, 모든 형태의 요일 완벽 제거
+                                    title = title.replace(/[-~_=—–\s]*[\[\(\{]?\s*[월화수목금토일]요일?\s*[\]\)\}]?/g, '');
+                                    title = title.replace(/[-~_=—–\s]+$/, '').trim(); 
+                                    title = title.replace(/^[-~_=—–\s]+/, '').trim(); // 앞쪽 찌꺼기도 제거
+                                    if (!title) title = "식단 안내";
+
+                                    // 2) 날짜 추출 고도화 (2026년 4월 17일, 4월 17일, 4.17 등 한글/특수문자 유연한 지원)
+                                    let dateVal = 0;
+                                    const fullDateMatch = originalTitle.match(/(\d{4})[-.\/년\s]*(\d{1,2})[-.\/월\s]*(\d{1,2})/);
+                                    if (fullDateMatch) {
+                                        dateVal = parseInt(fullDateMatch[2]) * 100 + parseInt(fullDateMatch[3]);
+                                    } else {
+                                        const shortDateMatch = originalTitle.match(/(\d{1,2})[-.\/월\s]*(\d{1,2})[일]?/);
+                                        if (shortDateMatch) {
+                                            dateVal = parseInt(shortDateMatch[1]) * 100 + parseInt(shortDateMatch[2]);
+                                        }
+                                    }
+
+                                    // 3) 식단 본문 텍스트 강화된 필터링
+                                    // 줄바꿈 태그(<br>, p태그, 실제 줄바꿈)를 콤마로 임시 변경 후 텍스트 변환
+                                    let desc = originalDesc.replace(/<\/p>|<\/div>|<br\s*\/?>|\n|\r/gi, ',');
+                                    desc = desc.replace(/<[^>]*>?/gm, ' '); // 남은 태그 제거
+                                    
+                                    // 영문, 숫자, 불필요한 단위/기호 완벽 제거
+                                    desc = desc.replace(/[0-9.:a-zA-Z]+/g, ''); 
+                                    desc = desc.replace(/인분|칼로리|제공량|kcal|g|mg|ml|%/gi, '');
+                                    
+                                    // 콤마를 기준으로 완벽하게 나누고 배열 정리
+                                    const menuList = desc.split(',').map(line => {
+                                        // 특수기호 완전 제거
+                                        let cl = line.replace(/[-~_=—–*※▶\[\]\(\)\{\}\<\>]+/g, ' ').trim();
+                                        
+                                        // 요일 단어 및 식단 관련 불필요한 헤더 텍스트 제거
+                                        cl = cl.replace(/[월화수목금토일]요일/g, ' ').trim();
+                                        cl = cl.replace(/식단안내|식단표|오늘의식단|식단|메뉴|중식|석식|조식/g, ' ').trim();
+                                        cl = cl.replace(/\s{2,}/g, ' '); // 다중 공백 단일화
+                                        
+                                        // 텍스트가 "월", "화" 등 단일 요일 글자만 남은 경우 비우기 (찌꺼기 요일 완벽 제거)
+                                        if (/^[월화수목금토일]$/.test(cl.replace(/\s/g, ''))) return '';
+                                        
+                                        // 작성자, 첨부, 조회수 등 게시판의 불필요한 열 정보 필터링
+                                        if (cl === '관리자' || cl === '첨부' || cl === '조회수' || cl === '파일' || cl === '목록') return '';
+                                        
+                                        return cl;
+                                    }).filter(line => line && line.replace(/\s/g, '').length > 0);
+                                    
+                                    const cleanedDesc = menuList.join('\n');
+                                    
+                                    return { title, desc: cleanedDesc, dateVal }; 
+                                }).filter(item => item !== null);
+
+                                allItems = [...allItems, ...parsedItems];
+
+                                // 현재 페이지에서 찾은 항목 중 오늘/미래 날짜의 식단이 포함되어 있는지 확인
+                                const hasTodayOrFutureMenu = parsedItems.some(item => item.dateVal >= todayVal || item.dateVal === 0);
+                                
+                                // 충분한 식단 데이터(오늘/미래)를 찾았다면, 다음 페이지(offset=10)를 긁지 않고 종료
+                                if (hasTodayOrFutureMenu) {
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        // 오늘 날짜 기준 필터링 및 오름차순 정렬
+                        let filtered = allItems.filter(item => item.dateVal >= todayVal || item.dateVal === 0);
+                        
+                        // 빈 정보(식단 내용이 완전히 없는 경우) 출력 제외
+                        filtered = filtered.filter(item => item.desc && item.desc.trim().length > 0);
+
+                        filtered.sort((a, b) => {
+                            if (a.dateVal && b.dateVal) return a.dateVal - b.dateVal;
+                            return 0;
+                        });
+
+                        if (filtered.length > 0) {
+                            setMenuPosts(filtered.slice(0, 14)); 
+                        } else {
+                            setMenuPosts(FALLBACK_MENU); 
+                        }
+                    } catch (e) { 
+                        setMenuPosts(FALLBACK_MENU);
+                    }
+                };
+                fetchMenuData();
+                const timer = setInterval(fetchMenuData, 3600000);
+                return () => clearInterval(timer);
+            }, []);
+
+            useEffect(() => {
+                const fetchRSS = async (isBackground = false) => {
+                    if (!isBackground) setLoading(true);
+                    try {
+                        const RSS_URL = 'https://rss.blog.naver.com/daehwasenior1352.xml';
+                        let xmlText = '';
+                        let success = false;
+                        
+                        const proxies = [
+                            `https://api.allorigins.win/raw?url=${encodeURIComponent(RSS_URL)}`,
+                            `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(RSS_URL)}`,
+                            `https://corsproxy.io/?${encodeURIComponent(RSS_URL)}`
+                        ];
+
+                        for (const proxyUrl of proxies) {
+                            try {
+                                const res = await fetch(proxyUrl);
+                                if (res.ok) {
+                                    const text = await res.text();
+                                    if (text.includes('<rss') || text.includes('<feed') || text.includes('<?xml')) {
+                                        xmlText = text;
+                                        success = true;
+                                        break; 
+                                    }
+                                }
+                            } catch (e) {}
+                        }
+
+                        if (!success) throw new Error("All proxies failed");
+
+                        const parser = new DOMParser();
+                        const xml = parser.parseFromString(xmlText, "text/xml");
+                        const items = Array.from(xml.querySelectorAll("item"));
+                        
+                        if (items.length > 0) {
+                            const parsedPosts = items.map(item => {
+                                const title = item.querySelector("title")?.textContent || "";
+                                const pubDateStr = item.querySelector("pubDate")?.textContent || "";
+                                const category = item.querySelector("category")?.textContent.trim() || "새로운 소식";
+                                const link = item.querySelector("link")?.textContent.trim().replace("blog.naver.com", "m.blog.naver.com") || "";
+                                let encodedNode = item.getElementsByTagNameNS("http://purl.org/rss/1.0/modules/content/", "encoded")[0] || item.getElementsByTagName("content:encoded")[0];
+                                let contentNode = (encodedNode ? encodedNode.textContent : null) || item.querySelector("description")?.textContent || "";
+                                const d = new Date(pubDateStr);
+                                const pubDate = isNaN(d) ? pubDateStr.split(' ')[0] : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                                const imgMatch = contentNode.match(/<img[^>]+src="([^">]+)"/);
+                                let textContent = contentNode.replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n\n').replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ').trim();
+                                textContent = textContent.replace(/\n{3,}/g, '\n\n'); 
+                                return { title, pubDate, category, link, thumbnail: imgMatch ? imgMatch[1] : null, description: textContent.replace(/\n/g, ' ').substring(0, 120) + '...', fullContent: textContent };
+                            });
+
+                            if (isBackground) {
+                                const currentFirstTitle = postsRef.current[0]?.title;
+                                const newFirstTitle = parsedPosts[0]?.title;
+                                if (currentFirstTitle !== newFirstTitle) {
+                                    const currentActivePost = postsRef.current[activeIndexRef.current];
+                                    let newActiveIndex = 0;
+                                    if (currentActivePost) {
+                                        const foundIndex = parsedPosts.findIndex(p => p.title === currentActivePost.title);
+                                        if (foundIndex !== -1) newActiveIndex = foundIndex;
+                                    }
+                                    setPosts(parsedPosts);
+                                    setActiveIndex(newActiveIndex);
+                                }
+                            } else {
+                                setPosts(parsedPosts);
+                            }
+                        } else {
+                            throw new Error("No items parsed");
+                        }
+                    } catch (error) { 
+                        if (!isBackground) setPosts(FALLBACK_POSTS); 
+                    } finally { 
+                        if (!isBackground) setLoading(false); 
+                    }
+                };
+
+                fetchRSS(false);
+                const bgSyncTimer = setInterval(() => fetchRSS(true), 600 * 1000); 
+                return () => clearInterval(bgSyncTimer);
+            }, []);
+
+            useEffect(() => {
+                if (activeTab === 'location') {
+                    const GOOGLE_MAPS_KEY = 'YOUR_GOOGLE_MAPS_API_KEY'; 
+                    
+                    // API 키가 기본값(placeholder)일 경우 API 요청 자체를 차단하여 콘솔 에러 방지
+                    if (GOOGLE_MAPS_KEY === 'YOUR_GOOGLE_MAPS_API_KEY') {
+                        setMapError(true);
+                        return;
+                    }
+                    
+                    const initGoogleMap = () => {
+                        const container = document.getElementById('google-map-container');
+                        if (container && window.google && window.google.maps) {
+                            try {
+                                const position = { lat: 37.675037, lng: 126.744186 };
+                                const map = new window.google.maps.Map(container, {
+                                    center: position,
+                                    zoom: 15,
+                                    disableDefaultUI: false,
+                                });
+                                new window.google.maps.Marker({
+                                    position: position,
+                                    map: map,
+                                });
+                                setMapError(false);
+                            } catch(e) { setMapError(true); }
+                        }
+                    };
+
+                    if (!document.getElementById('google-map-script')) {
+                        window.initMap = initGoogleMap;
+                        
+                        // 인증 실패 시 (잘못된 API 키 등) 발생되는 에러를 처리하는 글로벌 콜백
+                        window.gm_authFailure = () => setMapError(true);
+
+                        const script = document.createElement('script');
+                        script.id = 'google-map-script';
+                        script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&callback=initMap`;
+                        script.async = true;
+                        script.defer = true;
+                        document.head.appendChild(script);
+                        script.onerror = () => setMapError(true);
+                    } else if (window.google && window.google.maps) {
+                        initGoogleMap();
+                    }
+                }
+            }, [activeTab]);
+
+            const displayPosts = posts.slice(0, settings.postCount);
+            const activePost = displayPosts[activeIndex] || displayPosts[0];
+
+            useEffect(() => {
+                const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+                return () => clearInterval(timer);
+            }, []);
+
+            useEffect(() => {
+                if (displayPosts.length === 0 || selectedPost || isAdminOpen || webViewUrl || activeTab !== 'news') return;
+                const timer = setInterval(() => setActiveIndex(current => (current + 1) % displayPosts.length), settings.interval * 1000);
+                return () => clearInterval(timer);
+            }, [displayPosts.length, selectedPost, activeIndex, settings.interval, isAdminOpen, webViewUrl, activeTab]);
+
+            const handlePrev = () => setActiveIndex(prev => (prev - 1 + displayPosts.length) % displayPosts.length);
+            const handleNext = () => setActiveIndex(prev => (prev + 1) % displayPosts.length);
+
+            const autoCloseTimerRef = useRef(null);
+            const resetAutoCloseTimer = useCallback(() => {
+                if (autoCloseTimerRef.current) clearTimeout(autoCloseTimerRef.current);
+                if ((selectedPost || selectedWeatherDay || selectedRoom || webViewUrl || activeTab !== 'news') && settings.autoCloseTimeout > 0) {
+                    autoCloseTimerRef.current = setTimeout(() => { 
+                        setSelectedPost(null); 
+                        setSelectedWeatherDay(null);
+                        setSelectedRoom(null);
+                        setWebViewUrl(null); 
+                        setActiveTab('news');
+                    }, settings.autoCloseTimeout * 1000);
+                }
+            }, [selectedPost, selectedWeatherDay, selectedRoom, webViewUrl, activeTab, settings.autoCloseTimeout]);
+
+            useEffect(() => { resetAutoCloseTimer(); return () => clearTimeout(autoCloseTimerRef.current); }, [resetAutoCloseTimer]);
+
+            const listPointerRef = useRef({ startY: 0, isDragging: false });
+            const onListDown = (e) => { listPointerRef.current.startY = e.clientY; listPointerRef.current.isDragging = false; };
+            const onListMove = (e) => { 
+                if (e.buttons > 0 || e.type.includes('touch')) {
+                    if (Math.abs(e.clientY - listPointerRef.current.startY) > 10) {
+                        listPointerRef.current.isDragging = true; 
+                    }
+                }
+            };
+            const onListUp = (e) => {
+                try { if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId); } catch (err) {}
+                if (listPointerRef.current.isDragging) {
+                    const diff = listPointerRef.current.startY - e.clientY;
+                    if (diff > 50) handleNext(); else if (diff < -50) handlePrev();
+                }
+            };
+            const onListClick = (idx, post) => { if (!listPointerRef.current.isDragging) { setActiveIndex(idx); setSelectedPost(post); } };
+
+            const mainPointerRef = useRef({ startX: 0, isDragging: false });
+            const onMainDown = (e) => { mainPointerRef.current.startX = e.clientX; mainPointerRef.current.isDragging = false; };
+            const onMainMove = (e) => { 
+                if (e.buttons > 0 || e.type.includes('touch')) {
+                    if (Math.abs(e.clientX - mainPointerRef.current.startX) > 10) {
+                        mainPointerRef.current.isDragging = true; 
+                    }
+                }
+            };
+            const onMainUp = (e) => {
+                try { if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId); } catch (err) {}
+                if (mainPointerRef.current.isDragging) {
+                    const diff = mainPointerRef.current.startX - e.clientX;
+                    if (diff > 50) handleNext(); else if (diff < -50) handlePrev();
+                }
+            };
+            const onMainClick = () => { if (!mainPointerRef.current.isDragging) setSelectedPost(activePost); };
+
+            const modalPointerRef = useRef({ startY: 0, startScroll: 0, isDragging: false });
+            const modalScrollRef = useRef(null);
+            const onModalDown = (e) => { modalPointerRef.current.isDragging = true; modalPointerRef.current.startY = e.clientY; modalPointerRef.current.startScroll = modalScrollRef.current.scrollTop; resetAutoCloseTimer(); };
+            const onModalMove = (e) => { if (!modalPointerRef.current.isDragging) return; if (e.buttons > 0 || e.type.includes('touch')) { modalScrollRef.current.scrollTop = modalPointerRef.current.startScroll - (e.clientY - modalPointerRef.current.startY) * 1.5; resetAutoCloseTimer(); } };
+            const onModalUp = (e) => { modalPointerRef.current.isDragging = false; try { if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId); } catch (err) {} resetAutoCloseTimer(); };
+
+            const timeString = currentTime.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+            const dateString = currentTime.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
+
+            if (loading) {
+                return (
+                    <div className="flex flex-col items-center justify-center w-full h-screen bg-stone-100">
+                        <div className={`w-14 h-14 border-4 ${colors.spinner} border-t-transparent rounded-full animate-spin mb-6`}></div>
+                        <p className="text-xl font-bold text-stone-600 tracking-tight">복지관 소식을 불러오고 있습니다...</p>
+                    </div>
+                );
+            }
+
+            const itemHeight = mode === '16:9' ? 110 : 96;
+            const currentFloorPlan = settings.floorPlan[currentFloor] || [];
+            const adminFloorPlanPreview = tempSettings.floorPlan[adminSelectedFloor] || [];
+
+            return (
+                <div ref={containerRef} className={`min-h-screen flex flex-col items-center justify-center bg-[#eaeaea] ${isFullscreen ? 'fixed inset-0 z-[100] w-full h-full p-0' : 'relative p-3 sm:p-6'}`} style={{ fontSize: `${settings.fontScale}%` }}>
+                    
+                    <div className={`bg-stone-50 shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex flex-col overflow-hidden transition-all duration-500 relative ${isFullscreen ? 'w-full h-full rounded-none' : (mode === '16:9' ? 'w-full max-w-[1280px] aspect-video rounded-3xl' : 'h-[85vh] aspect-[9/16] rounded-3xl')}`}>
+                        
+                        {/* 상단 헤더 영역 */}
+                        <header style={{ fontSize: `${settings.fontScaleHeader || 100}%` }} className={`${colors.header} text-white z-10 flex relative ${mode === '16:9' ? 'px-[2em] py-[1em] flex-row justify-between items-center' : 'pt-[1.5em] pb-[1.25em] flex-col items-center justify-center gap-[0.75em]'}`}>
+                            
+                            <div className={`flex items-center min-w-0 ${mode === '16:9' ? 'gap-[1em]' : 'gap-[0.75em] w-full justify-center px-[1em]'}`}>
+                                <div className={`bg-white ${colors.iconText} flex-shrink-0 rounded-full flex items-center justify-center shadow-inner animate-heart-pulse ${mode === '16:9' ? 'p-[0.5em] w-[2.75em] h-[2.75em]' : 'p-[0.4em] w-[2.25em] h-[2.25em]'}`}>
+                                    <Icon name="heart" size={mode === '16:9' ? "1.5em" : "1.25em"} />
+                                </div>
+                                <div className={`flex flex-col min-w-0 text-left`}>
+                                    <h1 className={`font-extrabold tracking-tight drop-shadow-sm truncate break-keep ${mode === '16:9' ? 'text-[1.5em]' : 'text-[1.25em]'}`}>고양시대화노인종합복지관 소식</h1>
+                                    {mode === '16:9' && <p className={`${colors.subtitle} text-[0.875em] mt-[0.125em] font-medium tracking-wide truncate`}>Know-人의 미래를 잇는 선배시민복지관</p>}
+                                </div>
+                            </div>
+                            
+                            <div className={`flex items-center flex-shrink-0 flex-nowrap justify-center whitespace-nowrap ${colors.weatherBg} rounded-full border border-white/10 backdrop-blur-sm shadow-inner ${mode === '16:9' ? 'px-[1.25em] py-[0.625em] gap-[1em]' : 'px-[0.8em] py-[0.35em] gap-[0.45em] w-auto max-w-[98%] overflow-hidden text-[0.8em]'}`}>
+                                <div className="flex items-center gap-[0.3em]">
+                                    <Icon name={weather.iconName} size={mode === '16:9' ? "1.125em" : "0.9em"} className={weather.color} />
+                                    <span className={`font-bold tracking-wide leading-none ${mode === '16:9' ? 'text-[0.9375em]' : 'text-[0.85em]'}`}>{weather.desc} {weather.temp}°C</span>
+                                </div>
+                                <div className="w-px h-[0.75em] bg-white/30 mx-[0.1em]"></div>
+                                <div className="flex items-center gap-[0.3em]">
+                                    <Icon name="calendar" size={mode === '16:9' ? "1.125em" : "0.9em"} className={colors.dateText} />
+                                    <span className={`font-bold tracking-wide leading-none ${mode === '16:9' ? 'text-[0.9375em]' : 'text-[0.85em]'}`}>{dateString}</span>
+                                </div>
+                                <div className="w-px h-[0.75em] bg-white/30 mx-[0.1em]"></div>
+                                <div className="flex items-center gap-[0.3em]">
+                                    <Icon name="clock" size={mode === '16:9' ? "1.125em" : "0.9em"} className={colors.dateText} />
+                                    <span className={`font-bold tracking-wide leading-none ${mode === '16:9' ? 'text-[0.9375em]' : 'text-[0.85em]'}`}>{timeString}</span>
+                                </div>
+                            </div>
+                        </header>
+
+                        {/* 5개 탭 분리 유지 - 하단 틈새 완전 밀착을 위해 items-end 적용 */}
+                        <div className={`flex items-end w-full pt-[0.3em] px-[0.5em] gap-[0.2em] ${colors.header} shadow-inner z-10 flex-shrink-0 ${mode === '16:9' ? '' : 'justify-between'}`}>
+                          {TABS.map(tab => {
+                            const isActive = activeTab === tab.id;
+                            return (
+                              <button
+                                key={tab.id}
+                                onClick={() => { setActiveTab(tab.id); resetAutoCloseTimer(); }}
+                                className={`
+                                  relative flex flex-1 flex-col items-center justify-center gap-[0.1em] font-bold rounded-t-[0.75em] transition-all select-none
+                                  ${mode === '16:9' ? 'flex-row px-[1.25em] text-[1.05em]' : 'text-[0.85em] px-[0.1em]'}
+                                  ${isActive 
+                                    ? 'bg-white text-stone-900 z-20 shadow-[0_-4px_10px_rgba(0,0,0,0.08)] py-[0.5em]' 
+                                    : 'bg-black/10 text-white/70 hover:bg-black/20 hover:text-white border-x border-t border-white/5 py-[0.4em]'}
+                                `}
+                              >
+                                 <Icon name={tab.iconName} size={mode === '16:9' ? "1.15em" : "1.05em"} className={isActive ? colors.listIcon.replace('text-', 'text-') : 'opacity-80'} />
+                                 <span className="whitespace-nowrap tracking-tight leading-none mt-[0.1em]">{tab.label}</span>
+                              </button>
+                            )
+                          })}
+                        </div>
+
+                        {/* 중앙 콘텐츠 */}
+                        <div className={`flex-1 flex overflow-hidden bg-white relative ${mode === '16:9' && activeTab === 'news' ? 'flex-row' : 'flex-col'}`}>
+                            
+                            {/* 1. 주요 소식 탭 */}
+                            {activeTab === 'news' && (
+                              <>
+                                {/* 좌측 메인 비주얼 영역 (화살표 버튼 완전히 제거) */}
+                                <div 
+                                    style={{ fontSize: `${settings.fontScaleMain || 100}%` }}
+                                    className={`${mode === '16:9' ? 'w-3/5 border-r' : 'h-[50%] border-b'} border-stone-200 relative bg-stone-900 overflow-hidden flex-shrink-0 cursor-pointer group select-none`}
+                                    onPointerDown={onMainDown} onPointerMove={onMainMove} onPointerUp={onMainUp} onClick={onMainClick}
+                                >
+                                    <div className="absolute inset-0 w-full h-full transition-transform duration-[15s] ease-out group-hover:scale-105 pointer-events-none">
+                                        {activePost?.thumbnail ? (
+                                            <img src={activePost.thumbnail} draggable="false" className="w-full h-full object-cover opacity-80" />
+                                        ) : (
+                                            <div className={`w-full h-full bg-gradient-to-br ${colors.emptyBg} flex items-center justify-center opacity-80`}><Icon name="heart" size="8.75em" className={colors.emptyHeart} /></div>
+                                        )}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                                    </div>
+
+                                    {/* 텍스트 컨테이너 - 폰트 및 여백 최적화 */}
+                                    <div className={`absolute bottom-0 left-0 w-full text-white z-10 flex flex-col justify-end h-full transition-all duration-500 pointer-events-none ${mode === '16:9' ? 'p-[3em] px-[4em] pb-[4em]' : 'p-[1.5em] pb-[2.5em] px-[2em]'}`}>
+                                        <h2 className={`font-black leading-tight drop-shadow-lg break-keep ${mode === '16:9' ? 'text-[2.75em] mb-[1em]' : 'text-[1.5em] mb-[0.5em] line-clamp-2'}`}>{activePost?.title}</h2>
+                                        <p className={`text-white/90 font-medium leading-relaxed drop-shadow-md break-keep ${mode === '16:9' ? 'text-[1.25em] line-clamp-2 max-w-3xl' : 'text-[0.9em] line-clamp-2'}`}>{activePost?.description}</p>
+                                    </div>
+                                    <div className="absolute bottom-0 left-0 w-full h-1.5 bg-white/20">
+                                        <div key={activeIndex + (selectedPost || isAdminOpen ? '-paused' : '')} className={`h-full ${colors.progress}`} style={{ animation: `progress ${settings.interval}s linear`, animationPlayState: (selectedPost || isAdminOpen) ? 'paused' : 'running' }} />
+                                    </div>
+                                </div>
+
+                                {/* 우측 소식 리스트 영역 */}
+                                <div style={{ fontSize: `${settings.fontScaleList || 100}%` }} className={`${mode === '16:9' ? 'w-2/5' : 'flex-1'} flex flex-col relative bg-white`}>
+                                    
+                                    {/* 좌우 이동 네비게이션 컨트롤 바 축소 */}
+                                    <div className={`bg-white border-b border-stone-100 shadow-sm flex items-center justify-between z-20 relative ${mode === '16:9' ? 'px-[1.5em] py-[0.75em]' : 'px-[1em] py-[0.5em]'}`}>
+                                        <button onClick={(e) => { e.stopPropagation(); handlePrev(); }} className={`flex items-center justify-center rounded-full hover:bg-stone-100 active:bg-stone-200 transition-colors ${colors.listIcon} ${mode === '16:9' ? 'w-[2.5em] h-[2.5em]' : 'w-[2em] h-[2em]'}`}>
+                                            <Icon name="chevron-left" size={mode === '16:9' ? "1.5em" : "1.25em"} />
+                                        </button>
+                                        <div className={`font-black tracking-widest bg-stone-100/80 px-[1em] py-[0.25em] rounded-full border border-stone-200/60 shadow-inner flex items-center gap-[0.25em] ${colors.listIcon} ${mode === '16:9' ? 'text-[1em]' : 'text-[0.875em]'}`}>
+                                            <span className="text-stone-800">{activeIndex + 1}</span>
+                                            <span className="text-stone-300 mx-1">/</span>
+                                            <span className="text-stone-400">{displayPosts.length}</span>
+                                        </div>
+                                        <button onClick={(e) => { e.stopPropagation(); handleNext(); }} className={`flex items-center justify-center rounded-full hover:bg-stone-100 active:bg-stone-200 transition-colors ${colors.listIcon} ${mode === '16:9' ? 'w-[2.5em] h-[2.5em]' : 'w-[2em] h-[2em]'}`}>
+                                            <Icon name="chevron-right" size={mode === '16:9' ? "1.5em" : "1.25em"} />
+                                        </button>
+                                    </div>
+
+                                    <div 
+                                        className="flex-1 overflow-hidden relative select-none touch-none" 
+                                        style={{ WebkitMaskImage: 'linear-gradient(to bottom, transparent 2%, black 15%, black 85%, transparent 98%)', maskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)' }}
+                                        onPointerDown={onListDown} onPointerMove={onListMove} onPointerUp={onListUp} onPointerCancel={onListUp}
+                                    >
+                                        <div className="flex flex-col transition-transform duration-700 ease-in-out absolute w-full top-1/2" style={{ transform: `translateY(calc(-${(activeIndex * itemHeight) + (itemHeight / 2)}px))` }}>
+                                            {displayPosts.map((post, idx) => {
+                                                const isActive = idx === activeIndex;
+                                                return (
+                                                    <div key={idx} onClick={() => onListClick(idx, post)} className={`flex items-center transition-all duration-500 w-full cursor-pointer box-border border-b border-stone-50 last:border-0 ${colors.hoverBg} ${mode === '16:9' ? 'px-[2em] py-[0.75em] gap-[1.25em]' : 'px-[1.5em] py-[0.5em] gap-[1em]'} ${isActive ? `bg-white shadow-[0_4px_25px_rgba(0,0,0,0.06)] border-l-[0.5em] ${colors.activeBorder} scale-[1.02] z-10 rounded-r-2xl` : 'opacity-60 border-l-[0.5em] border-transparent'}`} style={{ height: `${itemHeight}px` }}>
+                                                        <div className={`rounded-xl overflow-hidden flex-shrink-0 bg-stone-100 border border-stone-200 shadow-sm relative flex items-center justify-center ${mode === '16:9' ? 'w-[5em] h-[5em]' : 'w-[3.5em] h-[3.5em]'}`}>
+                                                            {post.thumbnail ? <img src={post.thumbnail} draggable="false" className="w-full h-full object-cover" /> : <Icon name="image" size="1.5em" className="text-stone-300" />}
+                                                            {!isActive && <div className="absolute inset-0 bg-white/40" />}
+                                                        </div>
+                                                        <div className="flex-1 overflow-hidden min-w-0 flex flex-col justify-center">
+                                                            <div className={`${colors.listIcon} font-bold mb-[0.25em] flex items-center gap-[0.25em] text-[0.75em]`}>
+                                                                <Icon name="calendar" size="1em" strokeWidth="3" /> {post.pubDate.replace(/-/g, '.')}
+                                                            </div>
+                                                            <h4 className={`font-extrabold break-keep transition-colors leading-snug line-clamp-2 ${mode === '16:9' ? 'text-[1.125em]' : 'text-[0.95em]'} ${isActive ? 'text-stone-900' : 'text-stone-600'}`}>{post.title}</h4>
+                                                        </div>
+                                                        {isActive && <Icon name="chevron-right" size="1.5em" className={`${colors.chevron} ml-1 animate-pulse`} strokeWidth="3" />}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                              </>
+                            )}
+
+                            {/* 2. 주간 날씨 정보 탭 */}
+                            {activeTab === 'weather' && (
+                              <div className="w-full h-full flex flex-col bg-stone-100 overflow-y-auto custom-scrollbar animate-[fadeIn_0.5s_ease-out] relative">
+                                <div className="bg-stone-100/90 px-[2em] md:px-[3em] py-[1.5em] border-b border-stone-200 shrink-0">
+                                    <h2 className="text-[2em] font-black text-stone-800 tracking-tight flex items-center justify-center md:justify-start gap-[0.5em]">
+                                        <Icon name="cloud-sun" size="1em" className={colors.listIcon} />
+                                        주간 날씨 예보
+                                    </h2>
+                                </div>
+                                <div className="flex flex-col items-center justify-start p-[1.5em] sm:p-[2em] md:p-[3em] w-full min-h-max">
+                                    
+                                    {/* 현재 날씨 메인 카드 (클릭 시 오늘의 상세 팝업 오픈) - 세로형은 여백을 늘리고 콘텐츠 크기를 줄여 여유롭게 배치 */}
+                                    <div className={`w-full bg-white rounded-[1.5em] sm:rounded-[2em] shadow-sm border border-stone-200 flex mb-[1.5em] sm:mb-[2em] shrink-0 cursor-pointer transition-all hover:shadow-md hover:border-stone-300 hover:scale-[1.02] active:scale-[0.98] overflow-hidden ${mode === '16:9' ? 'max-w-[48em] p-[2em] flex-row items-center justify-center gap-[2.5em]' : 'max-w-[36em] py-[1.8em] px-[2em] sm:py-[2.5em] sm:px-[3em] flex-row items-center justify-center gap-[1em] sm:gap-[1.5em]'}`}
+                                         onClick={() => setSelectedWeatherDay(weeklyWeather[0])}>
+                                        
+                                        {mode === '16:9' ? (
+                                            <>
+                                                <div className="p-[1.5em] rounded-full bg-stone-50 border border-stone-100 shadow-inner flex items-center justify-center shrink-0">
+                                                    <Icon name={weather.iconName} size="4em" className={weather.modalColor} />
+                                                </div>
+                                                <div className="flex flex-col items-start min-w-0 flex-1 justify-center py-1">
+                                                    <span className="text-[1.25em] font-extrabold text-stone-500 mb-[0.2em] leading-tight flex items-center gap-[0.3em] w-full truncate">
+                                                        <Icon name="mapPin" size="1.1em" className="shrink-0 text-stone-400"/> <span className="truncate">고양시 일산서구 대화동</span>
+                                                    </span>
+                                                    <div className="flex items-center gap-[1.2em] mt-[0.2em] w-full min-w-0">
+                                                        <span className="text-[4.5em] font-black text-stone-900 leading-none tracking-tighter pt-[0.1em] shrink-0">{weather.temp}°</span>
+                                                        <div className="flex flex-col min-w-0 justify-center flex-1">
+                                                            <span className="text-[2em] font-extrabold text-stone-700 leading-tight truncate w-full">{weather.desc}</span>
+                                                            <span className="text-stone-500 font-bold text-[0.85em] flex items-center gap-1 mt-[0.3em] whitespace-nowrap bg-stone-100 px-[0.8em] py-[0.3em] rounded-full w-fit transition-colors hover:bg-stone-200 shrink-0">
+                                                                상세 예보 보기 <Icon name="chevron-right" size="1.2em" />
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="p-[0.8em] sm:p-[1em] rounded-full bg-stone-50 border border-stone-100 shadow-inner flex items-center justify-center shrink-0">
+                                                    <Icon name={weather.iconName} size="2.2em" className={`${weather.modalColor} drop-shadow-sm`} />
+                                                </div>
+                                                <div className="flex items-center justify-center gap-[0.6em] sm:gap-[0.8em]">
+                                                    <span className="text-[2.8em] sm:text-[3.2em] font-black text-stone-900 leading-none tracking-tighter pt-[0.1em] shrink-0">{weather.temp}°</span>
+                                                    <span className="text-[1.2em] sm:text-[1.4em] font-extrabold text-stone-700 leading-tight shrink-0">{weather.desc}</span>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    {/* 주간 일기 예보 리스트 (Grid/List) */}
+                                    {mode === '16:9' ? (
+                                        <div className="w-full max-w-[48em] grid grid-cols-7 gap-[0.75em] shrink-0 pb-[2em]">
+                                            {weeklyWeather.map((day, idx) => (
+                                                <div key={idx} onClick={() => setSelectedWeatherDay(day)} className={`cursor-pointer flex flex-col items-center justify-center bg-white rounded-[1.25em] p-[1.25em] border ${idx === 0 ? colors.activeBorder + ' border-2 shadow-md scale-[1.02]' : 'border-stone-200 hover:border-stone-300'} transition-all hover:shadow-md active:scale-95`}>
+                                                    <span className={`font-black text-[1em] mb-[0.5em] ${idx === 0 ? colors.listIcon : 'text-stone-600'}`}>{day.day}</span>
+                                                    <Icon name={day.iconName} size="2.5em" className={`${day.modalColor} drop-shadow-sm`} />
+                                                    <div className="flex items-center gap-[0.5em] mt-[0.75em] text-[0.9em] font-bold">
+                                                        <span className="text-blue-500">{day.minTemp}°</span>
+                                                        <div className="w-[1.5px] h-[0.8em] bg-stone-200"></div>
+                                                        <span className="text-red-500">{day.maxTemp}°</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="w-full max-w-[34em] flex flex-col gap-[0.8em] shrink-0 pb-[3em]">
+                                            {weeklyWeather.map((day, idx) => (
+                                                <div key={idx} onClick={() => setSelectedWeatherDay(day)} className={`cursor-pointer flex flex-row items-center justify-between bg-white rounded-[1.5em] px-[1.5em] sm:px-[2em] py-[1.2em] sm:py-[1.4em] border ${idx === 0 ? colors.activeBorder + ' border-2 shadow-md scale-[1.02] z-10' : 'border-stone-200 hover:border-stone-300'} transition-all hover:shadow-md active:scale-95`}>
+                                                    
+                                                    {/* 요일 영역 */}
+                                                    <div className="flex items-center justify-start w-[25%] sm:w-[20%] shrink-0">
+                                                        <span className={`font-black text-[1.1em] sm:text-[1.2em] break-keep ${idx === 0 ? colors.listIcon : 'text-stone-600'}`}>{day.day}</span>
+                                                    </div>
+                                                    
+                                                    {/* 날씨 아이콘 영역 */}
+                                                    <div className="flex items-center justify-center flex-1 shrink-0">
+                                                        <Icon name={day.iconName} size="2.5em" className={`${day.modalColor} drop-shadow-sm`} />
+                                                    </div>
+                                                    
+                                                    {/* 기온 (최저/최고) 영역 - 줄바꿈 없이 비율 최적화 */}
+                                                    <div className="flex items-center justify-end w-[40%] sm:w-[35%] shrink-0 gap-[0.4em] sm:gap-[1em]">
+                                                        <span className="text-blue-500 font-black text-[1em] sm:text-[1.2em] shrink-0">{day.minTemp}°</span>
+                                                        <div className="w-[1.5px] h-[1em] bg-stone-200 rounded-full shrink-0"></div>
+                                                        <span className="text-red-500 font-black text-[1em] sm:text-[1.2em] shrink-0">{day.maxTemp}°</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* 3. 식단 정보 탭 (콤마 분리, 숫자 제거 필터 적용) */}
+                            {activeTab === 'menu' && (
+                              <div className="w-full h-full flex flex-col bg-stone-100 overflow-y-auto custom-scrollbar animate-[fadeIn_0.5s_ease-out] relative">
+                                <div className="bg-stone-100/90 px-[2em] md:px-[3em] py-[1.5em] border-b border-stone-200 shrink-0">
+                                    <h2 className="text-[2em] font-black text-stone-800 tracking-tight flex items-center justify-center md:justify-start gap-[0.5em]">
+                                        <Icon name="utensils" size="1em" className={colors.listIcon} />
+                                        주간 식단 안내
+                                    </h2>
+                                </div>
+                                <div className="p-[2em] md:p-[3em] flex flex-col gap-[1.5em] max-w-[64em] mx-auto w-full pt-[3em]">
+                                    {menuPosts.length > 0 ? (
+                                        <div className={`grid ${mode === '16:9' ? 'grid-cols-2 md:grid-cols-3 gap-[2.5em]' : 'grid-cols-1 gap-[2em]'}`}>
+                                            {menuPosts.map((post, idx) => (
+                                                <div key={idx} className="bg-white rounded-[2em] shadow-sm border border-stone-200 hover:shadow-lg transition-shadow flex flex-col relative">
+                                                    
+                                                    {/* 맛있어 보이는 우측 상단 플로팅 오늘의 식단 뱃지 */}
+                                                    {idx === 0 && (
+                                                        <div className="absolute -top-[1.2em] -right-[0.5em] md:-right-[1em] bg-gradient-to-r from-orange-500 to-rose-500 text-white text-[0.85em] px-[1.5em] py-[0.5em] rounded-full font-black shadow-lg flex items-center gap-[0.4em] z-20 border-[3px] border-white transform rotate-3">
+                                                            <Icon name="utensils" size="1.2em" /> <span>오늘의 식단</span>
+                                                        </div>
+                                                    )}
+
+                                                    <div className={`${colors.listIcon.replace('text-', 'bg-').replace(/[0-9]+$/, '50')} px-[2em] py-[1.25em] border-b border-stone-100 flex items-center justify-between relative rounded-t-[2em] overflow-hidden`}>
+                                                        <h3 className={`text-[1.25em] font-extrabold ${colors.iconText} flex items-start gap-[0.5em] leading-tight w-full break-keep`}>
+                                                            <Icon name="calendar" size="1.1em" className="shrink-0 mt-[0.1em]" /> 
+                                                            <span>{post.title}</span>
+                                                        </h3>
+                                                    </div>
+                                                    <div className="p-[2em] flex-1">
+                                                        <div className="flex flex-col gap-[0.75em]">
+                                                            {post.desc ? post.desc.split('\n').map((item, i) => (
+                                                                <div key={i} className="flex items-center gap-[0.75em] text-[1.125em] text-stone-700 font-medium break-keep">
+                                                                    <div className={`w-[0.5em] h-[0.5em] rounded-full flex-shrink-0 ${colors.progress}`}></div>
+                                                                    <span className="leading-snug">{item}</span>
+                                                                </div>
+                                                            )) : <div className="text-stone-400 font-medium">식단 내용이 없습니다.</div>}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center py-[10em] text-stone-500">
+                                            <div className={`w-[4em] h-[4em] border-[0.4em] ${colors.spinner} border-t-transparent rounded-full animate-spin mb-[1.5em]`}></div>
+                                            <p className="text-[1.5em] font-bold">식단 정보를 불러오는 중입니다...</p>
+                                        </div>
+                                    )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* 4. 강좌 정보 탭 */}
+                            {activeTab === 'course' && (
+                              <div className="w-full h-full relative bg-stone-100 animate-[fadeIn_0.5s_ease-out]">
+                                <iframe 
+                                    src="https://senior-edu.net/application/index.php" 
+                                    className="absolute inset-0 w-full h-full border-none z-10 bg-white"
+                                    title="Course Information"
+                                ></iframe>
+                              </div>
+                            )}
+
+                            {/* 5-1. 위치 정보 탭 (Google Map 임베드) */}
+                            {activeTab === 'location' && (
+                              <div className={`w-full h-full flex ${mode === '16:9' ? 'flex-row p-[2em]' : 'flex-col p-[1.5em]'} gap-[1.5em] bg-white animate-[fadeIn_0.4s_ease-out] overflow-hidden`}>
+                                <div className={`flex ${mode === '16:9' ? 'flex-col items-center justify-center w-[30%] border-r pr-[1.5em]' : 'flex-row items-center justify-start border-b pb-[1.5em]'} border-stone-100 shrink-0 text-left overflow-hidden`}>
+                                   <div className={`p-[1.2em] rounded-[1.5em] bg-stone-50 border border-stone-100 shadow-md ${colors.listIcon} ${mode === '16:9' ? 'mb-[1.5em]' : 'mr-[1.2em] shrink-0'}`}>
+                                      <Icon name="mapPin" size={mode === '16:9' ? '2.5em' : '2em'} />
+                                   </div>
+                                   <div className="flex flex-col min-w-0 flex-1 justify-center" style={{ containerType: 'inline-size' }}>
+                                     <h2 className={`${mode === '16:9' ? 'text-[min(2em,9cqi)] text-center break-keep' : 'text-[min(1.4em,6.5cqi)] whitespace-nowrap'} font-black text-stone-900 tracking-tight`}>
+                                        {mode === '16:9' ? <>고양시대화노인종합복지관<br/>오시는 길</> : '고양시대화노인종합복지관 오시는 길'}
+                                     </h2>
+                                     <p className={`${mode === '16:9' ? 'text-[min(1.2em,5.5cqi)] text-center break-keep' : 'text-[min(1.1em,4.5cqi)] whitespace-nowrap'} text-stone-600 font-medium mt-[0.3em]`}>
+                                        경기도 고양시 일산서구 일산로 778 (대화동)
+                                     </p>
+                                     <p className={`${mode === '16:9' ? 'text-[min(1.2em,5.5cqi)] justify-center' : 'text-[min(1.1em,4.5cqi)] justify-start whitespace-nowrap'} text-stone-500 mt-[0.1em] font-bold flex items-center gap-[0.5em]`}>
+                                       <Icon name="phone" size="1.1em" className="shrink-0" /> <span>031-917-1352</span>
+                                     </p>
+                                   </div>
+                                </div>
+                                <div className="flex-1 w-full h-full rounded-[2em] overflow-hidden shadow-inner border-[0.3em] border-stone-100 bg-stone-200 relative flex items-center justify-center min-h-0 pointer-events-auto">
+                                    <iframe 
+                                        src="https://maps.google.com/maps?width=100%25&height=600&hl=ko&q=%EA%B2%BD%EA%B8%B0%EB%8F%84%20%EA%B3%A0%EC%96%91%EC%8B%9C%20%EC%9D%BC%EC%82%B0%EC%84%9C%EA%B5%AC%20%EC%9D%BC%EC%82%B0%EB%A1%9C%20778+(%EA%B3%A0%EC%96%91%EC%8B%9C%EB%8C%80%ED%99%94%EB%85%B8%EC%9D%B8%EC%A2%85%ED%95%A9%EB%B3%B5%EC%A7%80%EA%B4%80)&t=&z=16&ie=UTF8&iwloc=B&output=embed" 
+                                        className="absolute inset-0 w-full h-full border-none" 
+                                        allowFullScreen="" 
+                                        loading="lazy" 
+                                        referrerPolicy="no-referrer-when-downgrade"
+                                        title="고양시대화노인종합복지관 구글 지도"
+                                    ></iframe>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* 5-2. 층별 안내도 탭 */}
+                            {activeTab === 'floor' && (
+                                <div className={`w-full h-full flex ${mode === '16:9' ? 'flex-row' : 'flex-col'} bg-[#f4f4f5] overflow-hidden animate-[fadeIn_0.4s_ease-out] relative`}>
+                                    
+                                    {mode === '16:9' ? (
+                                        <>
+                                            {/* 16:9 가로형: 좌측 도면, 우측 선택 버튼 */}
+                                            <div className="flex-1 h-full relative p-[2.5em] flex items-center justify-center overflow-hidden min-h-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-stone-200/50 to-stone-300/40">
+                                                {/* 좌측 상단 도면 제목 라벨 (선택 사항) */}
+                                                <div className="absolute top-[2em] left-[2em] bg-white/90 backdrop-blur-xl px-[1.5em] py-[1em] rounded-[1.25em] border border-stone-200/60 shadow-lg z-10">
+                                                    <h2 className="text-[1.6em] font-black text-stone-800 tracking-tight flex items-center gap-[0.5em]">
+                                                        <div className={`p-2 rounded-xl bg-stone-100 ${colors.iconText}`}>
+                                                            <Icon name="layout" size="1em" />
+                                                        </div>
+                                                        안내도
+                                                    </h2>
+                                                </div>
+                                                
+                                                {/* 도면 캔버스 (4:3 비율 고정 및 반응형 폰트(cqmin) 최적화) */}
+                                                <div className="flex items-center justify-center w-full h-full">
+                                                    <div className="bg-stone-50 rounded-[2.5em] shadow-[inset_0_10px_40px_rgba(0,0,0,0.06)] border-[0.8em] border-white relative overflow-hidden shrink-0"
+                                                         style={{ 
+                                                             containerType: 'size', // 가로/세로 비율에 맞춰 폰트 크기를 통일하기 위함
+                                                             width: 'auto',
+                                                             height: '100%',
+                                                             aspectRatio: '4/3',
+                                                             maxWidth: '100%',
+                                                             maxHeight: '100%'
+                                                         }}>
+                                                        
+                                                        {/* 통합된 기준 폰트 크기 설정 (cqmin: 부모의 너비/높이 중 작은 값 기준 비율) */}
+                                                        <div className="absolute inset-0" style={{ fontSize: '2.5cqmin' }}>
+                                                            {/* 프리미엄 도면 격자 배경 */}
+                                                            <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.04)_1px,transparent_1px)] pointer-events-none" style={{ backgroundSize: '3cqmin 3cqmin' }}></div>
+                                                            
+                                                            {/* 방/시설 렌더링 (층 변경 시 부드러운 페이드인 적용) */}
+                                                            <div key={currentFloor} className="absolute inset-0 w-full h-full animate-[fadeIn_0.5s_ease-out]">
+                                                                {currentFloorPlan.map(room => {
+                                                                    const isStructural = room.icon === 'elevator' || room.icon === 'stairs' || room.name.includes('화장실') || room.name.includes('방재실') || room.name.includes('주차장');
+                                                                    const isCurrentLocation = room.icon === 'navigation' || room.name.includes('현 위치');
+                                                                    const isEntrance = room.icon === 'door' || room.name.includes('출입구');
+                                                                    
+                                                                    let roomStyleClass = "";
+                                                                    let iconStyleClass = "";
+                                                                    let textStyleClass = "";
+                                                                    
+                                                                    if (isCurrentLocation) {
+                                                                        roomStyleClass = "z-40 animate-bounce border-0";
+                                                                        iconStyleClass = "text-rose-600 drop-shadow-[0_8px_8px_rgba(225,29,72,0.5)]";
+                                                                        textStyleClass = "text-rose-700 bg-white/90 px-[0.5em] py-[0.1em] rounded-lg shadow-sm border border-rose-200 mt-[0.2em]";
+                                                                    } else if (isEntrance) {
+                                                                        roomStyleClass = "z-30 animate-bounce border-0";
+                                                                        iconStyleClass = "text-blue-600 drop-shadow-[0_8px_8px_rgba(37,99,235,0.5)]";
+                                                                        textStyleClass = "text-blue-800 bg-white/90 px-[0.5em] py-[0.1em] rounded-lg shadow-sm border border-blue-200 mt-[0.2em]";
+                                                                    } else if (isStructural) {
+                                                                        roomStyleClass = "bg-stone-200/80 border-stone-300 hover:bg-stone-300 hover:border-stone-400 text-stone-600 rounded-[1em] border-[0.15em] overflow-hidden";
+                                                                        iconStyleClass = "opacity-80";
+                                                                        textStyleClass = "text-stone-600";
+                                                                    } else {
+                                                                        roomStyleClass = `bg-white/95 backdrop-blur-md border-stone-200/80 hover:shadow-2xl hover:-translate-y-[0.3em] hover:z-20 ${colors.activeBorder.replace('border-', 'hover:border-')} text-stone-800 rounded-[1em] border-[0.15em] overflow-hidden`;
+                                                                        iconStyleClass = `${colors.listIcon} transition-all duration-300`;
+                                                                        textStyleClass = "text-stone-800 group-hover:text-stone-900";
+                                                                    }
+
+                                                                    return (
+                                                                        <div key={room.id} onClick={() => setSelectedRoom(room)}
+                                                                             className={`absolute flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300 group ${roomStyleClass}`}
+                                                                             style={{ left: `${room.x}%`, top: `${room.y}%`, width: `${room.w}%`, height: `${room.h}%` }}>
+                                                                            
+                                                                            <div className={`flex flex-col items-center justify-center w-full h-full p-[0.3em] ${(isCurrentLocation || isEntrance) ? '' : 'transform transition-transform duration-300 group-hover:scale-105'}`}>
+                                                                                {/* 모든 박스의 아이콘 사이즈를 '1.8em'으로 완벽하게 통일 */}
+                                                                                <Icon name={room.icon || 'info'} size={(isCurrentLocation || isEntrance) ? "2.5em" : "1.8em"} className={`shrink-0 ${(isCurrentLocation || isEntrance) ? 'mb-[0.1em]' : 'mb-[0.2em]'} ${iconStyleClass}`} />
+                                                                                <div className="w-full flex items-center justify-center min-h-0">
+                                                                                    {/* 폰트 깨짐 방지: 줄바꿈 강제 유지 및 넘침 제어 */}
+                                                                                    <span className={`font-extrabold leading-[1.15] tracking-tight break-keep text-center ${textStyleClass}`}
+                                                                                          style={{ fontSize: '0.85em', wordBreak: 'keep-all' }}>
+                                                                                        {room.name.includes('\n') ? room.name.split('\n').map((l, i) => <span key={i} className="block">{l}</span>) : room.name}
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    )
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            {/* 우측 층 선택 패널 (세련된 입체 팝아웃 형태) */}
+                                            <div className="w-[18em] bg-white border-l border-stone-200/60 shadow-2xl flex flex-col shrink-0 z-20">
+                                                <div className="py-[2.5em] px-[2em] bg-stone-50/50 border-b border-stone-100 flex flex-col justify-center items-start">
+                                                    <span className="font-extrabold text-[1.1em] text-stone-400 mb-1 tracking-wider">SELECT FLOOR</span>
+                                                    <span className={`font-black text-[1.6em] ${colors.iconText}`}>층 선택하기</span>
+                                                </div>
+                                                <div className="flex flex-col gap-[0.8em] p-[2em] pt-[1.5em] flex-1 justify-start overflow-y-auto custom-scrollbar bg-stone-50/30">
+                                                    {['ROOF', '3F', '2F', '1F', 'B1'].map(f => (
+                                                        <button key={f} onClick={() => setCurrentFloor(f)} 
+                                                            className={`w-full py-[1.2em] px-[1.5em] rounded-2xl font-black text-[1.25em] transition-all flex items-center justify-between
+                                                                ${currentFloor === f 
+                                                                    ? `${colors.badge} text-white shadow-[0_10px_25px_rgba(0,0,0,0.15)] scale-105 -translate-x-[0.5em] ring-4 ring-white` 
+                                                                    : 'bg-white text-stone-500 border border-stone-200 shadow-sm hover:bg-stone-50 hover:text-stone-700 hover:-translate-x-[0.2em]'}
+                                                            `}
+                                                        >
+                                                            <span>{f === 'ROOF' ? '옥상' : f === 'B1' ? '지하' : `${f.replace('F', '층')}`}</span>
+                                                            {currentFloor === f && <Icon name="chevron-right" size="1.2em" className="opacity-80" />}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            {/* 9:16 세로형: 위쪽 정보, 아래쪽 도면 */}
+                                            <div className="flex flex-col w-full h-full">
+                                                {/* 상단 제목 및 스위치형 층 선택기 */}
+                                                <div className="bg-white/90 backdrop-blur-xl pt-[2em] pb-[1.5em] px-[1.5em] border-b border-stone-200 shadow-sm flex flex-col items-center shrink-0 z-10 w-full gap-[1.2em]">
+                                                    <h2 className="text-[1.8em] font-black text-stone-800 tracking-tight flex items-center justify-center gap-[0.4em] w-full">
+                                                        <div className={`p-1.5 rounded-xl bg-stone-100 ${colors.iconText}`}>
+                                                            <Icon name="layout" size="1em" />
+                                                        </div>
+                                                        층별 안내도
+                                                    </h2>
+                                                    {/* 스위치 컨트롤 스타일 - 한 화면에 꽉 차게 100% 반응형 비율 적용 */}
+                                                    <div className="flex w-full bg-stone-100 p-[0.3em] rounded-full shadow-inner border border-stone-200/60 gap-[0.2em]">
+                                                        {['ROOF', '3F', '2F', '1F', 'B1'].map(f => (
+                                                            <button key={f} onClick={() => setCurrentFloor(f)} 
+                                                                className={`flex-1 py-[0.7em] px-[0.1em] rounded-full font-extrabold text-[0.85em] sm:text-[1em] transition-all flex items-center justify-center min-w-0 
+                                                                    ${currentFloor === f ? `bg-white shadow-[0_4px_12px_rgba(0,0,0,0.08)] ${colors.iconText}` : 'text-stone-500 hover:text-stone-700'}`}
+                                                            >
+                                                                <span className="truncate block w-full text-center">{f === 'ROOF' ? '옥상' : f === 'B1' ? '지하' : `${f.replace('F', '층')}`}</span>
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                {/* 도면 캔버스 영역 (화면 안에서 100% 최적화) */}
+                                                <div className="flex-1 w-full relative p-[1.5em] flex flex-col items-center justify-center bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-stone-200/50 to-stone-300/40 overflow-hidden min-h-0">
+                                                    
+                                                    <div className="bg-stone-50 rounded-[2.5em] shadow-[inset_0_10px_40px_rgba(0,0,0,0.06)] border-[0.6em] border-white relative overflow-hidden shrink-0 w-full"
+                                                         style={{ 
+                                                             containerType: 'size', // 가로/세로 비율에 맞춰 폰트 크기를 통일하기 위함
+                                                             height: 'auto',
+                                                             aspectRatio: '4/3',
+                                                             maxWidth: '100%',
+                                                             maxHeight: '100%'
+                                                         }}>
+                                                         
+                                                         <div className="absolute inset-0" style={{ fontSize: '2.5cqmin' }}>
+                                                            {/* 프리미엄 도면 격자 배경 */}
+                                                            <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.04)_1px,transparent_1px)] pointer-events-none" style={{ backgroundSize: '3cqmin 3cqmin' }}></div>
+                                                            
+                                                            {/* 요소 렌더링 (층 변경 시 부드러운 페이드인 적용) */}
+                                                            <div key={currentFloor} className="absolute inset-0 w-full h-full animate-[fadeIn_0.5s_ease-out]">
+                                                                {currentFloorPlan.map(room => {
+                                                                    const isStructural = room.icon === 'elevator' || room.icon === 'stairs' || room.name.includes('화장실') || room.name.includes('방재실') || room.name.includes('주차장');
+                                                                    const isCurrentLocation = room.icon === 'navigation' || room.name.includes('현 위치');
+                                                                    const isEntrance = room.icon === 'door' || room.name.includes('출입구');
+                                                                    
+                                                                    let roomStyleClass = "";
+                                                                    let iconStyleClass = "";
+                                                                    let textStyleClass = "";
+                                                                    
+                                                                    if (isCurrentLocation) {
+                                                                        roomStyleClass = "z-40 animate-bounce border-0";
+                                                                        iconStyleClass = "text-rose-600 drop-shadow-[0_8px_8px_rgba(225,29,72,0.5)]";
+                                                                        textStyleClass = "text-rose-700 bg-white/90 px-[0.5em] py-[0.1em] rounded-lg shadow-sm border border-rose-200 mt-[0.2em]";
+                                                                    } else if (isEntrance) {
+                                                                        roomStyleClass = "z-30 animate-bounce border-0";
+                                                                        iconStyleClass = "text-blue-600 drop-shadow-[0_8px_8px_rgba(37,99,235,0.5)]";
+                                                                        textStyleClass = "text-blue-800 bg-white/90 px-[0.5em] py-[0.1em] rounded-lg shadow-sm border border-blue-200 mt-[0.2em]";
+                                                                    } else if (isStructural) {
+                                                                        roomStyleClass = "bg-stone-200/80 border-stone-300 hover:bg-stone-300 hover:border-stone-400 text-stone-600 rounded-[1em] border-[0.15em] overflow-hidden";
+                                                                        iconStyleClass = "opacity-80";
+                                                                        textStyleClass = "text-stone-600";
+                                                                    } else {
+                                                                        roomStyleClass = `bg-white/95 backdrop-blur-md border-stone-200/80 hover:shadow-xl hover:-translate-y-[0.3em] hover:z-20 ${colors.activeBorder.replace('border-', 'hover:border-')} text-stone-800 rounded-[1em] border-[0.15em] overflow-hidden`;
+                                                                        iconStyleClass = `${colors.listIcon} transition-all duration-300`;
+                                                                        textStyleClass = "text-stone-800 group-hover:text-stone-900";
+                                                                    }
+
+                                                                    return (
+                                                                        <div key={room.id} onClick={() => setSelectedRoom(room)}
+                                                                             className={`absolute flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300 group ${roomStyleClass}`}
+                                                                             style={{ left: `${room.x}%`, top: `${room.y}%`, width: `${room.w}%`, height: `${room.h}%` }}>
+                                                                            
+                                                                            <div className={`flex flex-col items-center justify-center w-full h-full p-[0.3em] ${(isCurrentLocation || isEntrance) ? '' : 'transform transition-transform duration-300 group-hover:scale-105'}`}>
+                                                                                {/* 모든 박스의 아이콘 사이즈를 '1.8em'으로 완벽하게 통일 */}
+                                                                                <Icon name={room.icon || 'info'} size={(isCurrentLocation || isEntrance) ? "2.5em" : "1.8em"} className={`shrink-0 ${(isCurrentLocation || isEntrance) ? 'mb-[0.1em]' : 'mb-[0.2em]'} ${iconStyleClass}`} />
+                                                                                <div className="w-full flex items-center justify-center min-h-0">
+                                                                                    {/* 폰트 깨짐 방지: 줄바꿈 강제 유지 및 넘침 제어 */}
+                                                                                    <span className={`font-extrabold leading-[1.15] tracking-tight break-keep text-center ${textStyleClass}`}
+                                                                                          style={{ fontSize: '0.85em', wordBreak: 'keep-all' }}>
+                                                                                        {room.name.includes('\n') ? room.name.split('\n').map((l, i) => <span key={i} className="block">{l}</span>) : room.name}
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    )
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+
+                        </div>
+                    </div>
+
+                    {/* 층별 안내 - 방 상세 정보 모달 */}
+                    {selectedRoom && (
+                        <div className="fixed inset-0 bg-stone-900/85 z-[130] flex items-center justify-center p-4 animate-fadeIn backdrop-blur-sm" onPointerDown={() => setSelectedRoom(null)}>
+                            <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl relative border border-stone-200/50 flex flex-col items-center p-8 transform transition-transform" onPointerDown={e => e.stopPropagation()}>
+                                <button onClick={() => setSelectedRoom(null)} className="absolute top-4 right-4 p-2 text-stone-400 hover:text-stone-600 bg-stone-100 hover:bg-stone-200 rounded-full transition-all active:scale-95"><Icon name="x" size="1.5em" /></button>
+                                <div className={`p-4 rounded-full ${colors.listIcon.replace('text-', 'bg-').replace(/[0-9]+$/, '100')} mb-4`}>
+                                    <Icon name={selectedRoom.icon || 'info'} size="3em" className={colors.iconText} />
+                                </div>
+                                <h3 className="text-2xl font-black text-stone-900 mb-2 text-center break-keep whitespace-pre-wrap leading-tight">{selectedRoom.name}</h3>
+                                <div className={`px-4 py-1 rounded-full text-sm font-bold mb-6 ${colors.badge} text-white`}>
+                                    {currentFloor === 'ROOF' ? '옥상' : currentFloor === 'B1' ? '지하' : `${currentFloor.replace('F', '층')}`}
+                                </div>
+                                <div className="w-full text-center border-t border-stone-100 pt-6">
+                                    <p className="text-[1.1em] font-medium text-stone-600 leading-relaxed break-keep">{selectedRoom.desc}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 날씨 상세 정보 모달 */}
+                    {selectedWeatherDay && (
+                        <div className="fixed inset-0 bg-stone-900/85 z-[130] flex items-center justify-center p-4 animate-fadeIn backdrop-blur-sm" onPointerDown={() => setSelectedWeatherDay(null)}>
+                            <div className="bg-white rounded-[2rem] w-full max-w-lg overflow-hidden shadow-2xl relative border border-stone-200/50 flex flex-col p-8 transform transition-transform" onPointerDown={e => e.stopPropagation()}>
+                                <button onClick={() => setSelectedWeatherDay(null)} className="absolute top-6 right-6 p-2 text-stone-400 hover:text-stone-600 bg-stone-100 hover:bg-stone-200 rounded-full transition-all active:scale-95"><Icon name="x" size="1.5em" /></button>
+                                
+                                <h3 className="text-2xl font-black text-stone-800 mb-6 flex items-center gap-2">
+                                    <Icon name="calendar" size="1em" className={colors.listIcon} />
+                                    {selectedWeatherDay.day === '오늘' ? '오늘의 상세 예보' : `${selectedWeatherDay.day}요일 상세 예보`}
+                                </h3>
+                                
+                                <div className="flex items-center justify-between bg-stone-50 p-6 rounded-[1.5rem] shadow-inner mb-6 border border-stone-100">
+                                    <div className="flex items-center gap-4">
+                                        <Icon name={selectedWeatherDay.iconName} size="5em" className={selectedWeatherDay.modalColor} />
+                                        {selectedWeatherDay.day === '오늘' && (
+                                            <span className="text-2xl font-extrabold text-stone-700 whitespace-nowrap">{weather.desc}</span>
+                                        )}
+                                    </div>
+                                    <div className="flex flex-col items-end gap-2">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-stone-500 font-bold">최고 기온</span>
+                                            <span className="text-3xl font-black text-red-500">{selectedWeatherDay.maxTemp}°</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-stone-500 font-bold">최저 기온</span>
+                                            <span className="text-3xl font-black text-blue-500">{selectedWeatherDay.minTemp}°</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-3">
+                                    {/* 미세먼지 (오늘 날씨 카드에만 표시) */}
+                                    {selectedWeatherDay.day === '오늘' && (
+                                        <div className="bg-stone-50 rounded-2xl p-4 border border-stone-100 flex flex-col justify-center items-center relative overflow-hidden">
+                                            <div className={`absolute top-0 left-0 w-full h-1 ${selectedWeatherDay.aqiBg}`} />
+                                            <span className="text-stone-500 font-bold text-sm mb-1">통합 대기질 (PM)</span>
+                                            <span className={`text-2xl font-black ${selectedWeatherDay.aqiColor}`}>{selectedWeatherDay.aqiDesc}</span>
+                                            <span className="text-xs font-bold text-stone-400 mt-1">미세먼지: {selectedWeatherDay.pm10}</span>
+                                        </div>
+                                    )}
+                                    
+                                    {/* 체감온도 */}
+                                    <div className={`bg-stone-50 rounded-2xl p-4 border border-stone-100 flex flex-col justify-center items-center ${selectedWeatherDay.day !== '오늘' ? 'col-span-2 sm:col-span-1' : ''}`}>
+                                        <Icon name="sun" size="1.6em" className="text-orange-400 mb-1"/>
+                                        <span className="text-stone-500 font-bold text-sm mb-1">{selectedWeatherDay.day === '오늘' ? '현재 체감온도' : '최고 체감온도'}</span>
+                                        <span className="text-xl font-black text-stone-800">{selectedWeatherDay.day === '오늘' ? weather.feelsLike : selectedWeatherDay.feelsLike}°C</span>
+                                    </div>
+
+                                    {/* 강수량 */}
+                                    <div className="bg-stone-50 rounded-2xl p-4 border border-stone-100 flex flex-col justify-center items-center">
+                                        <Icon name="droplet" size="1.6em" className="text-blue-400 mb-1"/>
+                                        <span className="text-stone-500 font-bold text-sm mb-1">강수량</span>
+                                        <span className="text-xl font-black text-stone-800">{selectedWeatherDay.precip} <span className="text-sm text-stone-500">mm</span></span>
+                                    </div>
+
+                                    {/* 바람 */}
+                                    <div className="bg-stone-50 rounded-2xl p-4 border border-stone-100 flex flex-col justify-center items-center">
+                                        <Icon name="wind" size="1.6em" className="text-emerald-500 mb-1"/>
+                                        <span className="text-stone-500 font-bold text-sm mb-1">최대 풍속</span>
+                                        <span className="text-xl font-black text-stone-800">{selectedWeatherDay.wind} <span className="text-sm text-stone-500">km/h</span></span>
+                                    </div>
+
+                                    {/* 일출/일몰 */}
+                                    <div className={`bg-stone-50 rounded-2xl p-4 border border-stone-100 flex flex-col justify-center items-center col-span-2`}>
+                                        <Icon name="sunrise" size="1.6em" className="text-orange-500 mb-1"/>
+                                        <span className="text-stone-500 font-bold text-sm mb-1">일출 / 일몰</span>
+                                        <span className="text-lg font-black text-stone-800 tracking-tighter">{selectedWeatherDay.sunrise} / {selectedWeatherDay.sunset}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 상세 안내 모달 영역 */}
+                    {selectedPost && (
+                        <div className="fixed inset-0 bg-stone-900/85 z-[120] flex items-center justify-center p-4 md:p-8 animate-fadeIn backdrop-blur-sm" onPointerMove={resetAutoCloseTimer} onWheel={resetAutoCloseTimer}>
+                            <div style={{ fontSize: `${settings.fontScaleModal || 100}%` }} className="bg-white rounded-[2rem] w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative border border-stone-200/50">
+                                <header className={`${colors.header} text-white p-5 md:p-6 px-8 flex justify-between items-center flex-shrink-0`}>
+                                    <h3 className="text-[1.5em] font-black flex items-center gap-2.5 tracking-tight break-keep"><Icon name="info" size="1.75em"/> 소식 상세 안내</h3>
+                                    <button onClick={() => setSelectedPost(null)} className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-all active:scale-95"><Icon name="x" size="2em" /></button>
+                                </header>
+                                <div className="flex-1 overflow-y-auto p-8 md:p-12 cursor-grab active:cursor-grabbing select-none no-scrollbar bg-stone-50 touch-none" ref={modalScrollRef} onPointerDown={onModalDown} onPointerMove={onModalMove} onPointerUp={onModalUp} onPointerCancel={onModalUp}>
+                                    <div className="bg-white p-8 md:p-10 rounded-3xl shadow-sm border border-stone-100 cursor-auto">
+                                        <div className={`${colors.listIcon} font-bold mb-4 flex items-center gap-2 text-[1.125em]`}><Icon name="calendar" size="1.25em"/> {selectedPost.pubDate}</div>
+                                        <h2 className="text-[1.875em] md:text-[2.25em] font-black text-stone-900 mb-8 break-keep leading-snug tracking-tight">{selectedPost.title}</h2>
+                                        {selectedPost.thumbnail && <div className="w-full rounded-2xl overflow-hidden mb-10 shadow-md border border-stone-100"><img src={selectedPost.thumbnail} draggable={false} className="w-full h-auto max-h-[500px] object-contain bg-stone-100" /></div>}
+                                        <div className="text-[1.25em] md:text-[1.35em] text-stone-700 leading-relaxed break-keep whitespace-pre-wrap font-medium">{selectedPost.fullContent}</div>
+                                        {selectedPost.link && <div className="mt-12 flex justify-center"><button onPointerDown={(e) => e.stopPropagation()} onClick={() => setWebViewUrl(selectedPost.link)} className="flex items-center gap-3 px-8 py-5 rounded-[1.25rem] font-bold text-[1.25em] transition-all shadow-lg bg-stone-800 text-white hover:bg-stone-700 active:scale-95 cursor-pointer pointer-events-auto"><Icon name="external-link" size="1.625em" /> 원문 보기</button></div>}
+                                    </div>
+                                </div>
+                                <footer className="p-5 md:p-6 bg-white border-t border-stone-200 flex justify-center flex-shrink-0"><button onClick={() => setSelectedPost(null)} className={`w-full md:w-auto md:min-w-[280px] px-12 py-4 ${colors.closeBtn} text-white text-[1.5em] font-black rounded-2xl shadow-lg transform transition-all active:scale-95 flex items-center justify-center gap-2`}><Icon name="x" size="1.75em" /> 창 닫기</button></footer>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 웹 뷰 창 */}
+                    {webViewUrl && (
+                        <div className="fixed inset-0 bg-stone-900/95 z-[130] flex flex-col animate-fadeIn backdrop-blur-md" onPointerMove={resetAutoCloseTimer} onWheel={resetAutoCloseTimer}>
+                            <header className="bg-stone-900 text-white p-4 px-6 md:px-8 flex justify-between items-center shadow-lg relative z-20">
+                                <div className="flex items-center gap-3"><div className="p-2 rounded-full bg-stone-700"><Icon name="globe" size={24} /></div><h3 className="text-xl md:text-2xl font-bold tracking-tight">네이버 블로그 원문 창</h3></div>
+                                <button onClick={() => setWebViewUrl(null)} className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-5 py-2.5 rounded-full transition-all active:scale-95 font-bold cursor-pointer pointer-events-auto"><Icon name="x" size={24} /> 돌아가기</button>
+                            </header>
+                            <div className="flex-1 w-full bg-stone-100 relative flex justify-center" style={{ touchAction: 'auto' }}>
+                                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 pointer-events-none z-0"><div className={`w-14 h-14 border-4 ${colors.spinner} border-t-transparent rounded-full animate-spin`}></div><p className="text-stone-500 font-bold text-lg break-keep">페이지를 불러오는 중입니다...</p></div>
+                                <div className="w-full max-w-[800px] h-full relative z-10 bg-white shadow-2xl overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}><iframe src={webViewUrl} className="w-full h-full border-none" title="Blog Web View" sandbox="allow-same-origin allow-scripts allow-popups allow-forms" style={{ touchAction: 'auto' }}></iframe></div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 관리자 톱니바퀴 버튼 */}
+                    <div className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 opacity-10 hover:opacity-100 focus-within:opacity-100 transition-opacity duration-300 group">
+                        <div className="absolute inset-[-30px] bg-transparent"></div>
+                        <button onClick={() => { 
+                            setTempSettings(settings); 
+                            setAdminSelectedRoomId(null);
+                            setIsAdminOpen(true); 
+                        }} className="bg-stone-900/60 hover:bg-stone-900 text-white p-3.5 rounded-full backdrop-blur-md shadow-xl transition-all relative z-10 cursor-pointer pointer-events-auto" title="관리자 설정">
+                            <Icon name="settings" size={24} />
+                        </button>
+                    </div>
+
+                    {/* 관리자 설정창 모달 */}
+                    {isAdminOpen && (
+                        <div className="fixed inset-0 bg-stone-900/80 z-[150] flex items-center justify-center p-4 md:p-8 animate-fadeIn backdrop-blur-sm" style={{ fontSize: '16px' }}>
+                            <div className={`bg-white rounded-[2rem] w-full ${adminTab === 'floorMap' ? 'max-w-6xl' : 'max-w-lg'} max-h-[90vh] overflow-hidden shadow-2xl flex flex-col border border-stone-200/50 transition-all duration-300`}>
+                                
+                                <div className="bg-stone-900 text-white p-6 flex flex-col md:flex-row justify-between items-center gap-4 flex-shrink-0">
+                                    <h3 className="text-xl font-black flex items-center gap-2.5 tracking-tight break-keep">
+                                        <Icon name="settings" size={24} /> 사이니지 통합 관리
+                                    </h3>
+                                    
+                                    {/* 관리자 내부 탭 */}
+                                    <div className="flex bg-stone-800 rounded-lg p-1">
+                                        <button onClick={() => setAdminTab('general')} className={`px-4 py-2 rounded-md font-bold text-sm transition-all ${adminTab === 'general' ? 'bg-white text-stone-900 shadow' : 'text-stone-300 hover:text-white'}`}>일반 설정</button>
+                                        <button onClick={() => setAdminTab('floorMap')} className={`px-4 py-2 rounded-md font-bold text-sm transition-all ${adminTab === 'floorMap' ? 'bg-white text-stone-900 shadow' : 'text-stone-300 hover:text-white'}`}>층별 안내 편집</button>
+                                    </div>
+                                    
+                                    <button onClick={() => setIsAdminOpen(false)} className="text-stone-400 hover:text-white transition-colors bg-white/10 p-2 rounded-full absolute right-6 md:static top-6"><Icon name="x" size={24} /></button>
+                                </div>
+                                
+                                <div className="flex-1 overflow-y-auto custom-scrollbar bg-stone-50 flex flex-col">
+                                    {adminTab === 'general' && (
+                                        <div className="p-8 flex flex-col gap-8">
+                                            <div className="space-y-3">
+                                                <label className="font-black text-stone-800 text-lg flex items-center gap-2 break-keep"><Icon name="layout" size={18} className="text-stone-400"/> 마지막 탭 메뉴 표시 선택</label>
+                                                <div className="flex gap-4">
+                                                    <label className={`flex-1 flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-colors ${tempSettings.lastTabType === 'location' ? colors.activeBorder + ' bg-white shadow-md' : 'border-stone-200 bg-stone-100 hover:bg-stone-200'}`}>
+                                                        <input type="radio" name="lastTabType" value="location" checked={tempSettings.lastTabType === 'location'} onChange={() => setTempSettings({...tempSettings, lastTabType: 'location'})} className="hidden" />
+                                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${tempSettings.lastTabType === 'location' ? colors.activeBorder : 'border-stone-400'}`}>
+                                                            {tempSettings.lastTabType === 'location' && <div className={`w-2.5 h-2.5 rounded-full ${colors.listIcon.replace('text-', 'bg-')}`}></div>}
+                                                        </div>
+                                                        <span className="font-bold">위치 정보 (지도)</span>
+                                                    </label>
+                                                    <label className={`flex-1 flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-colors ${tempSettings.lastTabType === 'floor' ? colors.activeBorder + ' bg-white shadow-md' : 'border-stone-200 bg-stone-100 hover:bg-stone-200'}`}>
+                                                        <input type="radio" name="lastTabType" value="floor" checked={tempSettings.lastTabType === 'floor'} onChange={() => setTempSettings({...tempSettings, lastTabType: 'floor'})} className="hidden" />
+                                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${tempSettings.lastTabType === 'floor' ? colors.activeBorder : 'border-stone-400'}`}>
+                                                            {tempSettings.lastTabType === 'floor' && <div className={`w-2.5 h-2.5 rounded-full ${colors.listIcon.replace('text-', 'bg-')}`}></div>}
+                                                        </div>
+                                                        <span className="font-bold">층별 안내 (도면)</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-3">
+                                                <label className="font-black text-stone-800 text-lg flex items-center gap-2 break-keep"><Icon name="heart" size={18} className="text-stone-400"/> 메인 테마 색상</label>
+                                                <div className="flex gap-4 flex-wrap">
+                                                    {THEME_OPTIONS.map(theme => (
+                                                        <button key={theme.id} onClick={() => setTempSettings({...tempSettings, theme: theme.id})} className={`group flex flex-col items-center gap-2`} title={theme.label}>
+                                                            <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-md ${theme.colorCode} ${tempSettings.theme === theme.id ? 'ring-4 ring-stone-800 ring-offset-4 scale-110' : 'hover:scale-110'}`}>
+                                                                {tempSettings.theme === theme.id && <Icon name="check" size={24} className="text-white" strokeWidth="4"/>}
+                                                            </div>
+                                                            <span className={`text-sm font-bold break-keep ${tempSettings.theme === theme.id ? 'text-stone-900' : 'text-stone-400 group-hover:text-stone-700'}`}>{theme.label.split(' ')[0]}</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-6">
+                                                <div className="space-y-2.5">
+                                                    <label className="font-black text-stone-800 text-sm break-keep">화면 비율 (레이아웃)</label>
+                                                    <select value={tempSettings.mode} onChange={(e) => setTempSettings({...tempSettings, mode: e.target.value})} className="w-full p-3.5 bg-white border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-500 font-bold shadow-sm">
+                                                        <option value="16:9">가로형 (16:9)</option>
+                                                        <option value="9:16">세로형 (9:16)</option>
+                                                    </select>
+                                                </div>
+                                                <div className="space-y-2.5">
+                                                    <label className="font-black text-stone-800 text-sm break-keep">표시할 피드 개수</label>
+                                                    <select value={tempSettings.postCount} onChange={(e) => setTempSettings({...tempSettings, postCount: Number(e.target.value)})} className="w-full p-3.5 bg-white border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-500 font-bold shadow-sm">
+                                                        <option value={5}>최신 5개</option>
+                                                        <option value={10}>최신 10개</option>
+                                                        <option value={15}>최신 15개</option>
+                                                        <option value={20}>최신 20개</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-6">
+                                                <div className="space-y-2.5">
+                                                    <label className="font-black text-stone-800 text-sm break-keep">자동 전환 간격: {tempSettings.interval}초</label>
+                                                    <input type="range" min="5" max="60" step="5" value={tempSettings.interval} onChange={(e) => setTempSettings({...tempSettings, interval: Number(e.target.value)})} className="w-full mt-2 accent-stone-800" />
+                                                </div>
+                                                <div className="space-y-2.5">
+                                                    <label className="font-black text-stone-800 text-sm break-keep">팝업 자동 닫기</label>
+                                                    <select value={tempSettings.autoCloseTimeout} onChange={(e) => setTempSettings({...tempSettings, autoCloseTimeout: Number(e.target.value)})} className="w-full p-3.5 bg-white border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-500 font-bold shadow-sm">
+                                                        <option value={10}>10초 후 닫기</option>
+                                                        <option value={20}>20초 후 닫기</option>
+                                                        <option value={30}>30초 후 닫기</option>
+                                                        <option value={60}>60초 후 닫기</option>
+                                                        <option value={0}>자동 닫기 끄기</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="pt-4 border-t border-stone-200 space-y-4">
+                                                <label className="font-black text-stone-800 text-lg flex items-center gap-2 break-keep">
+                                                    <Icon name="info" size={18} className="text-stone-400"/> 글씨 크기 상세 설정
+                                                </label>
+                                                
+                                                <div className="space-y-2.5">
+                                                    <label className="font-bold text-stone-700 text-sm break-keep">전체 화면 글씨 배율: {tempSettings.fontScale || 100}%</label>
+                                                    <input type="range" min="80" max="200" step="5" value={tempSettings.fontScale || 100} onChange={(e) => setTempSettings({...tempSettings, fontScale: Number(e.target.value)})} className="w-full mt-2 accent-stone-800" />
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="space-y-2">
+                                                        <label className="font-bold text-stone-600 text-xs break-keep">상단 제목: {tempSettings.fontScaleHeader || 100}%</label>
+                                                        <input type="range" min="50" max="200" step="5" value={tempSettings.fontScaleHeader || 100} onChange={(e) => setTempSettings({...tempSettings, fontScaleHeader: Number(e.target.value)})} className="w-full accent-stone-800" />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <label className="font-bold text-stone-600 text-xs break-keep">주요 소식(왼쪽): {tempSettings.fontScaleMain || 100}%</label>
+                                                        <input type="range" min="50" max="200" step="5" value={tempSettings.fontScaleMain || 100} onChange={(e) => setTempSettings({...tempSettings, fontScaleMain: Number(e.target.value)})} className="w-full accent-stone-800" />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <label className="font-bold text-stone-600 text-xs break-keep">소식 목록(오른쪽): {tempSettings.fontScaleList || 100}%</label>
+                                                        <input type="range" min="50" max="200" step="5" value={tempSettings.fontScaleList || 100} onChange={(e) => setTempSettings({...tempSettings, fontScaleList: Number(e.target.value)})} className="w-full accent-stone-800" />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <label className="font-bold text-stone-600 text-xs break-keep">상세 안내 팝업: {tempSettings.fontScaleModal || 100}%</label>
+                                                        <input type="range" min="50" max="200" step="5" value={tempSettings.fontScaleModal || 100} onChange={(e) => setTempSettings({...tempSettings, fontScaleModal: Number(e.target.value)})} className="w-full accent-stone-800" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="pt-2"><button onClick={() => { toggleFullscreen(); setIsAdminOpen(false); }} className={`w-full py-4 rounded-2xl font-black flex items-center justify-center gap-2 transition-all shadow-sm border break-keep ${isFullscreen ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100' : 'bg-white text-stone-800 border-stone-200 hover:bg-stone-100'}`}><Icon name={isFullscreen ? "minimize" : "maximize"} size={20} /> {isFullscreen ? '전체화면 종료하기' : '전체화면으로 시작하기'}</button></div>
+                                        </div>
+                                    )}
+                                    
+                                    {/* 층별 안내도 편집 탭 */}
+                                    {adminTab === 'floorMap' && (
+                                        <div className="flex flex-col md:flex-row h-full">
+                                            {/* 왼쪽: 에디터 폼 */}
+                                            <div className="w-full md:w-1/3 bg-white border-r border-stone-200 flex flex-col p-6 overflow-y-auto">
+                                                
+                                                <div className="mb-6 flex justify-between items-end">
+                                                    <div>
+                                                        <label className="block text-sm font-bold text-stone-500 mb-2">편집할 층 선택</label>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {['ROOF', '3F', '2F', '1F', 'B1'].map(f => (
+                                                                <button 
+                                                                    key={f} 
+                                                                    onClick={() => { setAdminSelectedFloor(f); setAdminSelectedRoomId(null); }} 
+                                                                    className={`px-3 py-1.5 rounded-lg font-bold text-sm border-2 transition-colors ${adminSelectedFloor === f ? colors.activeBorder + ' text-stone-800 bg-stone-50' : 'border-stone-200 text-stone-500 hover:border-stone-300'}`}
+                                                                >
+                                                                    {f}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                    <button onClick={() => {
+                                                        if (window.confirm(`${adminSelectedFloor}의 모든 편집 내용을 지우고 기본 도면으로 초기화하시겠습니까?`)) {
+                                                            setTempSettings(prev => ({
+                                                                ...prev,
+                                                                floorPlan: {
+                                                                    ...prev.floorPlan,
+                                                                    [adminSelectedFloor]: DEFAULT_FLOOR_PLAN[adminSelectedFloor]
+                                                                }
+                                                            }));
+                                                            setAdminSelectedRoomId(null);
+                                                        }
+                                                    }} className="flex items-center gap-1 text-xs bg-stone-400 hover:bg-stone-500 text-white px-2.5 py-1.5 rounded-lg font-bold transition-colors shadow-sm h-fit">
+                                                        <Icon name="delete" size={14} /> 현재 층 초기화
+                                                    </button>
+                                                </div>
+
+                                                <div className="mb-6">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <label className="block text-sm font-bold text-stone-500">편집할 공간/시설 선택</label>
+                                                        <button onClick={handleAddRoom} className="flex items-center gap-1 text-xs bg-emerald-500 hover:bg-emerald-600 text-white px-2.5 py-1.5 rounded-lg font-bold transition-colors shadow-sm">
+                                                            <Icon name="layout" size={14} /> 새 요소 추가
+                                                        </button>
+                                                    </div>
+                                                    <select 
+                                                        value={adminSelectedRoomId || ''} 
+                                                        onChange={(e) => setAdminSelectedRoomId(e.target.value)}
+                                                        className="w-full p-2.5 bg-stone-50 border border-stone-200 rounded-lg font-bold text-stone-800 focus:outline-none focus:ring-2 focus:ring-stone-400"
+                                                    >
+                                                        <option value="" disabled>요소를 선택하세요</option>
+                                                        {(tempSettings.floorPlan[adminSelectedFloor] || []).map(r => (
+                                                            <option key={r.id} value={r.id}>{r.name.replace(/\n/g, ' ')}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+
+                                                {adminSelectedRoomId ? (() => {
+                                                    const room = tempSettings.floorPlan[adminSelectedFloor].find(r => r.id === adminSelectedRoomId);
+                                                    if(!room) return null;
+                                                    return (
+                                                        <div className="flex flex-col gap-4 p-5 bg-white rounded-xl border border-stone-200 shadow-sm">
+                                                            <div className="flex justify-between items-center pb-3 border-b border-stone-100">
+                                                                <div className="font-extrabold text-stone-800 text-sm">요소 상세 속성</div>
+                                                                <button onClick={handleDeleteRoom} className="text-xs text-red-500 hover:text-red-700 font-bold px-2.5 py-1.5 bg-red-50 hover:bg-red-100 rounded-lg transition-colors flex items-center gap-1">
+                                                                    <Icon name="x" size={14} /> 삭제
+                                                                </button>
+                                                            </div>
+                                                            
+                                                            <div className="space-y-3">
+                                                                <div>
+                                                                    <label className="text-[11px] font-bold text-stone-500 mb-1 block">이름 (줄바꿈은 엔터)</label>
+                                                                    <textarea value={room.name} onChange={e => updateRoomSetting('name', e.target.value)} className="w-full p-2.5 text-sm font-bold border border-stone-200 rounded-lg focus:ring-2 focus:ring-stone-400 outline-none" rows="2" />
+                                                                </div>
+                                                                <div>
+                                                                    <label className="text-[11px] font-bold text-stone-500 mb-1 block">상세 설명</label>
+                                                                    <textarea value={room.desc} onChange={e => updateRoomSetting('desc', e.target.value)} className="w-full p-2.5 text-sm border border-stone-200 rounded-lg focus:ring-2 focus:ring-stone-400 outline-none" rows="2" />
+                                                                </div>
+                                                                <div>
+                                                                    <label className="text-[11px] font-bold text-stone-500 mb-1 block">아이콘</label>
+                                                                    <select value={room.icon || 'info'} onChange={e => updateRoomSetting('icon', e.target.value)} className="w-full p-2.5 text-sm font-bold border border-stone-200 rounded-lg focus:ring-2 focus:ring-stone-400 outline-none">
+                                                                        <option value="info">안내/정보 (Info)</option>
+                                                                        <option value="layout">일반 공간 (Room)</option>
+                                                                        <option value="users">사무실/인물 (Users)</option>
+                                                                        <option value="coffee">카페/휴게 (Coffee)</option>
+                                                                        <option value="monitor">PC/디지털 (Monitor)</option>
+                                                                        <option value="heart">상담/돌봄 (Heart)</option>
+                                                                        <option value="utensils">식당 (Utensils)</option>
+                                                                        <option value="sun">정원/야외 (Sun)</option>
+                                                                        <option value="elevator">엘리베이터</option>
+                                                                        <option value="stairs">계단</option>
+                                                                        <option value="settings">방재/설비 (Settings)</option>
+                                                                        <option value="bookOpen">도서/교육 (Book)</option>
+                                                                        <option value="door">출입구 (Entrance)</option>
+                                                                        <option value="navigation">현 위치 (Current)</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="pt-3 border-t border-stone-100 space-y-3">
+                                                                <div>
+                                                                    <div className="flex justify-between mb-1 text-xs font-bold text-stone-600"><span>가로 위치 (X)</span><span>{room.x}%</span></div>
+                                                                    <input type="range" min="0" max="100" value={room.x} onChange={(e) => updateRoomSetting('x', Number(e.target.value))} className="w-full accent-blue-500" />
+                                                                </div>
+                                                                <div>
+                                                                    <div className="flex justify-between mb-1 text-xs font-bold text-stone-600"><span>세로 위치 (Y)</span><span>{room.y}%</span></div>
+                                                                    <input type="range" min="0" max="100" value={room.y} onChange={(e) => updateRoomSetting('y', Number(e.target.value))} className="w-full accent-red-500" />
+                                                                </div>
+                                                                <div className="mt-2">
+                                                                    <div className="flex justify-between mb-1 text-xs font-bold text-stone-600"><span>가로 크기 (Width)</span><span>{room.w}%</span></div>
+                                                                    <input type="range" min="3" max="100" value={room.w} onChange={(e) => updateRoomSetting('w', Number(e.target.value))} className="w-full accent-emerald-500" />
+                                                                </div>
+                                                                <div>
+                                                                    <div className="flex justify-between mb-1 text-xs font-bold text-stone-600"><span>세로 크기 (Height)</span><span>{room.h}%</span></div>
+                                                                    <input type="range" min="3" max="100" value={room.h} onChange={(e) => updateRoomSetting('h', Number(e.target.value))} className="w-full accent-purple-500" />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })() : (
+                                                    <div className="flex-1 flex flex-col items-center justify-center p-6 border-2 border-dashed border-stone-200 rounded-xl text-stone-400 text-center">
+                                                        <Icon name="layout" size={32} className="mb-2 opacity-50" />
+                                                        <p className="text-sm font-bold">위 목록에서 수정할<br/>요소를 선택해주세요.</p>
+                                                    </div>
+                                                )}
+                                                
+                                                <p className="mt-auto pt-6 text-xs text-stone-400 font-medium break-keep">
+                                                    * 미리보기 도면에서 각 요소의 크기와 위치를 조정해 실제 화면에 어떻게 나타날지 확인하세요. (비율 기준 조정)
+                                                </p>
+                                            </div>
+                                            
+                                            {/* 오른쪽: 라이브 미리보기 캔버스 (4:3 비율 고정 및 통일된 폰트 렌더링) */}
+                                            <div className="w-full md:w-2/3 p-4 md:p-8 flex items-center justify-center bg-stone-200 min-h-0">
+                                                <div className="bg-white rounded-2xl shadow-[inset_0_10px_40px_rgba(0,0,0,0.06)] border-[4px] border-white relative overflow-hidden ring-1 ring-stone-300 shrink-0"
+                                                     style={{
+                                                         containerType: 'size', // 반응형 폰트 스케일링을 위한 컨테이너 정의
+                                                         width: mode === '16:9' ? 'auto' : '100%',
+                                                         height: mode === '16:9' ? '100%' : 'auto',
+                                                         aspectRatio: '4/3',
+                                                         maxWidth: '100%',
+                                                         maxHeight: '100%'
+                                                     }}>
+                                                    
+                                                    {/* 통합된 기준 폰트 크기 설정 (cqmin 적용) */}
+                                                    <div className="absolute inset-0" style={{ fontSize: '2.5cqmin' }}>
+                                                        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.04)_1px,transparent_1px)] pointer-events-none" style={{ backgroundSize: '3cqmin 3cqmin' }}></div>
+                                                        
+                                                        {adminFloorPlanPreview.map(room => {
+                                                            const isStructural = room.icon === 'elevator' || room.icon === 'stairs' || room.name.includes('화장실') || room.name.includes('방재실') || room.name.includes('주차장');
+                                                            const isCurrentLocation = room.icon === 'navigation' || room.name.includes('현 위치');
+                                                            const isEntrance = room.icon === 'door' || room.name.includes('출입구');
+                                                            
+                                                            let roomStyleClass = "";
+                                                            let iconStyleClass = "";
+                                                            let textStyleClass = "";
+                                                            
+                                                            if (adminSelectedRoomId === room.id) {
+                                                                roomStyleClass = "border-red-500 bg-red-50 z-40 shadow-md ring-4 ring-red-500/20 rounded-[1em] border-[0.15em] overflow-hidden";
+                                                                iconStyleClass = "text-red-500";
+                                                                textStyleClass = "text-red-600";
+                                                            } else if (isCurrentLocation) {
+                                                                roomStyleClass = "z-40 animate-bounce border-0";
+                                                                iconStyleClass = "text-rose-600 drop-shadow-[0_8px_8px_rgba(225,29,72,0.5)]";
+                                                                textStyleClass = "text-rose-700 bg-white/90 px-[0.5em] py-[0.1em] rounded-lg shadow-sm border border-rose-200 mt-[0.2em]";
+                                                            } else if (isEntrance) {
+                                                                roomStyleClass = "z-30 animate-bounce border-0";
+                                                                iconStyleClass = "text-blue-600 drop-shadow-[0_8px_8px_rgba(37,99,235,0.5)]";
+                                                                textStyleClass = "text-blue-800 bg-white/90 px-[0.5em] py-[0.1em] rounded-lg shadow-sm border border-blue-200 mt-[0.2em]";
+                                                            } else if (isStructural) {
+                                                                roomStyleClass = "bg-stone-200/80 border-stone-300 hover:bg-stone-300 z-0 rounded-[1em] border-[0.15em] overflow-hidden";
+                                                                iconStyleClass = "opacity-80 text-stone-600";
+                                                                textStyleClass = "text-stone-600";
+                                                            } else {
+                                                                roomStyleClass = "bg-white/95 border-stone-200/80 hover:border-stone-400 z-10 rounded-[1em] border-[0.15em] overflow-hidden";
+                                                                iconStyleClass = "opacity-60 text-stone-500";
+                                                                textStyleClass = "text-stone-700";
+                                                            }
+
+                                                            return (
+                                                                <div 
+                                                                    key={room.id}
+                                                                    onClick={() => setAdminSelectedRoomId(room.id)}
+                                                                    className={`absolute flex flex-col items-center justify-center text-center cursor-pointer transition-all select-none group ${roomStyleClass}`}
+                                                                    style={{
+                                                                        left: `${room.x}%`,
+                                                                        top: `${room.y}%`,
+                                                                        width: `${room.w}%`,
+                                                                        height: `${room.h}%`,
+                                                                    }}
+                                                                >
+                                                                    <div className={`flex flex-col items-center justify-center w-full h-full p-[0.3em]`}>
+                                                                        <Icon name={room.icon || 'info'} size={(isCurrentLocation || isEntrance) && adminSelectedRoomId !== room.id ? "2.5em" : "1.8em"} className={`shrink-0 ${(isCurrentLocation || isEntrance) && adminSelectedRoomId !== room.id ? 'mb-[0.1em]' : 'mb-[0.2em]'} ${iconStyleClass}`} />
+                                                                        <div className="w-full flex items-center justify-center min-h-0">
+                                                                            <span className={`font-bold leading-[1.15] tracking-tight break-keep text-center pointer-events-none ${textStyleClass}`}
+                                                                                  style={{ fontSize: '0.85em', wordBreak: 'keep-all' }}>
+                                                                                {room.name.includes('\n') ? room.name.split('\n').map((l, i) => <span key={i} className="block">{l}</span>) : room.name}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="p-6 bg-white border-t border-stone-100 flex gap-3 flex-shrink-0">
+                                    <button onClick={() => setIsAdminOpen(false)} className="flex-1 py-4 rounded-xl font-black text-stone-500 bg-stone-100 hover:bg-stone-200 transition-colors break-keep">취소</button>
+                                    <button onClick={handleSaveSettings} className={`flex-[2] py-4 rounded-xl font-black text-white transition-all shadow-md flex items-center justify-center gap-2 break-keep ${THEME_COLORS[tempSettings.theme]?.saveBtn || 'bg-emerald-600 hover:bg-emerald-700'}`}>
+                                        <Icon name="save" size={20} /> 설정 저장하기
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
